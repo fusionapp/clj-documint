@@ -44,9 +44,10 @@
             [bidi.ring :refer [make-handler]]
             [ring.middleware.defaults :refer [wrap-defaults api-defaults]]
             [manifold.deferred :as d]
+            [documint.content :as content]
             [documint.session :as session]
             [documint.actions :refer [perform-action]]
-            [documint.util :refer [map-vals]]))
+            [documint.util :refer [transform-map]]))
 
 
 (def routes
@@ -126,36 +127,35 @@
 
 (defn- session-uri
   "Construct the URI for a session resource."
-  ([ctx {session-id :id}]
+  ([ctx session]
    (uri-for ctx (bidi/path-for routes
                                ::session-resource
-                               ::session-id session-id))))
+                               ::session-id (session/session-id session)))))
 
 
 (defn- session-perform-uri
   "Construct the URI for a session perform resource."
-  ([ctx {session-id :id}]
+  ([ctx session]
    (uri-for ctx (bidi/path-for routes
                                ::session-perform
-                               ::session-id session-id))))
+                               ::session-id (session/session-id session)))))
 
 
 (defn- content-index-uri
   "Construct the URI for a content index."
-  ([ctx {session-id :id}]
+  ([ctx session]
    (uri-for ctx (bidi/path-for routes
                                ::content-index
-                               ::session-id session-id))))
+                               ::session-id (session/session-id session)))))
 
 
 (defn- content-uri
   "Construct the URI for a content resource."
-  ([ctx {content-id :id
-         session-id :session-id}]
+  ([ctx content]
    (uri-for ctx (bidi/path-for routes
                                ::content-resource
-                               ::session-id session-id
-                               ::content-id content-id))))
+                               ::session-id (content/session-id content)
+                               ::content-id (content/content-id content)))))
 
 
 (defn parse-json
@@ -227,19 +227,15 @@
     (session/destroy session)))
 
 
-(defn- perform-response
-  ""
+(defn- transform-response
+  "Transform an action response map."
   [make-uri response]
-  (if (contains? response :links)
-    (update response
-            :links
-            (partial map-vals
-                     (fn [results]
-                       (let [uris (map make-uri results)]
-                         (if (= 1 (count uris))
-                           (first uris)
-                           uris)))))
-    response))
+  (transform-map
+   (fn [v]
+     (if (satisfies? content/IContent v)
+       (make-uri v)
+       v))
+   response))
 
 
 (defresource session-perform [{:keys [session-factory]
@@ -260,7 +256,7 @@
     (let [make-uri (partial content-uri ctx)
           outputs  (perform-action action parameters session state)
           d        (d/chain outputs
-                            #(perform-response make-uri %)
+                            #(transform-response make-uri %)
                             #(assoc {} ::response %))
           ; We deref here because Liberator doesn't really do async.
           response (deref d 10000 ::no-response)]

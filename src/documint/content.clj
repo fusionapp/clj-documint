@@ -6,7 +6,22 @@
             [clojure.tools.logging :as log]))
 
 
-(defrecord LocalContent [id session-id content-type file])
+(defprotocol IContent
+  "Stored content item."
+  (content-id [this]
+   "Retrieve the identifier for this content.")
+
+  (session-id [this]
+   "Retrieve the session identifier for this content."))
+
+
+(defrecord LocalContent [id session-id content-type file]
+  IContent
+  (content-id [this]
+    id)
+
+  (session-id [this]
+    session-id))
 
 
 (defn- tmpdir
