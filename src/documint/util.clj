@@ -52,3 +52,16 @@
                   (when (empty? @waiting)
                     (.close closeable)))]
     done))
+
+
+(defn transform-map
+  "Recursively transform every primitive value in map `m` by passing it to `f`,
+  while retaining the structure of `m`."
+  [f m]
+  (map-vals
+   (fn [v]
+     (cond
+       (map? v)        (transform-map f v)
+       (sequential? v) (map f v)
+       :else           (f v)))
+   m))

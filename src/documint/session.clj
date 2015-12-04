@@ -10,6 +10,9 @@
 
 (defprotocol ISession
   "Session."
+  (session-id [this]
+   "Retrieve the identifier for this session.")
+
   (destroy [this]
    "Destroy this session and its storage.")
 
@@ -25,6 +28,9 @@
 
 (defrecord Session [id destroy storage]
   ISession
+  (session-id [this]
+    id)
+
   (destroy [this]
     (log/info "Destroying session"
               {:id id})
