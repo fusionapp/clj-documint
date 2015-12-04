@@ -34,8 +34,8 @@
   "Load config files from all known paths if they exist and combine them."
   []
   (log/info "Loading configuration")
-  (let [known-paths [(jio/file (user-home) ".config" "documint" "documint.json")
-                     (jio/file (run-dir) "documint.json")]]
+  (let [known-paths [(jio/file (user-home) ".config" "documint" "config.json")
+                     (jio/file (run-dir) "documint.config.json")]]
     (reduce
      (fn [config f]
        (merge config (parse-config f)))
