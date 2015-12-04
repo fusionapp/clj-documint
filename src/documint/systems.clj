@@ -9,7 +9,8 @@
             [documint.render.flying-saucer :as saucer]
             [documint.session :refer [temp-file-session-factory]]
             [documint.actions :refer [register-actions!]]
-            [documint.actions.pdf :as pdf-actions]))
+            [documint.actions.pdf :as pdf-actions]
+            [documint.config :refer [load-config]]))
 
 
 (defonce -session-factory (temp-file-session-factory))
@@ -24,10 +25,10 @@
     "thumbnails"  pdf-actions/thumbnails
     "split"       pdf-actions/split
     "metadata"    pdf-actions/metadata})
-  ; XXX: don't hardcode the config
-  (web/make-app
-   {:renderer        (saucer/renderer {:font-path "/Users/jonathan/.fonts"})
-    :session-factory -session-factory}))
+  (let [config (load-config)]
+    (web/make-app
+     {:renderer        (saucer/renderer (:renderer config {}))
+      :session-factory -session-factory})))
 
 
 (defsystem dev-system
