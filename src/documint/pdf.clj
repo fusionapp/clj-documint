@@ -3,8 +3,7 @@
   (:require [clojure.data.json :as json]
             [clojure.java.io :as jio]
             [clojure.tools.logging :as log]
-            [ring.util.io :refer [piped-input-stream]]
-            [documint.util :refer [wait-close]])
+            [documint.util :refer [wait-close piped-input-stream]])
   (:import [java.io InputStream]
            [java.awt Color]
            [java.awt.image BufferedImage]

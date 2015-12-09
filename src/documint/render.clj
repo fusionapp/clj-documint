@@ -2,7 +2,7 @@
   "Render documents."
   (:require [clojure.java.io :as jio]
             [clojure.tools.logging :as log]
-            [ring.util.io :refer [piped-input-stream]]))
+            [documint.util :refer [piped-input-stream]]))
 
 
 (defprotocol IRenderer
