@@ -21,3 +21,24 @@
   (testing "nested map"
     (is (= (util/transform-map inc {:a {:b 1}})
            {:a {:b 2}}))))
+
+
+(deftest piped-input-stream
+  "Tests for `documint.util/piped-input-stream."
+  (testing "success"
+    (let [f (util/piped-input-stream
+             (fn [output]
+               (spit output "hello")))]
+      (is (= (slurp @f)
+             "hello"))))
+
+  (testing "failure"
+    (let [f (util/piped-input-stream
+             (fn [output]
+               (throw (ex-info "Bad stuff" {:cause :bad-stuff}))))]
+      (is (thrown? clojure.lang.ExceptionInfo @f))
+      (try
+        @f
+        (catch clojure.lang.ExceptionInfo e
+          (is (= (ex-data e)
+                 {:cause :bad-stuff})))))))
