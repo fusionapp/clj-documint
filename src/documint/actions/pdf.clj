@@ -10,6 +10,15 @@
             [documint.util :refer [fetch-content fetch-multiple-contents]]))
 
 
+(defn- put-multiple-contents
+  "Store multiple contents of the same content-type in a session.
+
+  Returns a seq of the stored contents."
+  [session content-type streams]
+  (map (partial session/put-content session content-type)
+       streams))
+
+
 (def render-html
   "Render an HTML document to a PDF document.
 
@@ -58,10 +67,9 @@
                (partial pdf/thumbnails breadth "jpg")
                (fn [streams]
                  {:links
-                  {:results
-                   (map
-                    (partial session/put-content session "image/jpeg")
-                    streams)}})))))
+                  {:results (put-multiple-contents session
+                                                   "image/jpeg"
+                                                   streams)}})))))
 
 
 (def split
@@ -78,10 +86,9 @@
                (partial pdf/split page-groups)
                (fn [streams]
                  {:links
-                  {:results
-                   (map
-                    (partial session/put-content session "application/pdf")
-                    streams)}})))))
+                  {:results (put-multiple-contents session
+                                                   "application/pdf"
+                                                   streams)}})))))
 
 
 (def metadata
