@@ -278,7 +278,7 @@
   (fn [{session ::session
         :as     ctx}]
     (let [body         (get-in ctx [:request :body])
-          content-type (get-in ctx [:request :headers :content-type]
+          content-type (get-in ctx [:request :headers "content-type"]
                                "application/octet-stream")
           content      (session/put-content session content-type body)]
       {:representation {:media-type "application/json"}
