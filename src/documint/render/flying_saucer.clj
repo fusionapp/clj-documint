@@ -12,7 +12,8 @@
   IRenderer
   (render [this input output {:keys [base-uri]
                               :as options}]
-    (log/info "Rendering a document with Flying Saucer")
+    (log/info "Rendering a document with Flying Saucer"
+              {:options options})
     (log/spy
      (doto renderer
        (.setDocument
