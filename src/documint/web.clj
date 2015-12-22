@@ -82,8 +82,6 @@
         deferred-content (session/get-content (::session ctx) id)
         content          (try
                            (deref deferred-content 10000 ::no-response)
-                           (catch clojure.lang.ExceptionInfo e
-                             e)
                            (catch Exception e
                              e))]
     (cond
@@ -101,7 +99,7 @@
 
       :else
       [true {:representation {:media-type (:content-type content)}
-             ::content content}])))
+             ::content       content}])))
 
 
 (defn- cause

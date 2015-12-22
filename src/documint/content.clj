@@ -73,8 +73,8 @@
            {:content-type content-type
             :stream       (jio/input-stream
                            (case content-type
-                             nil        (throw (ex-info "Empty content entry"
-                                                        {:id id}))
+                             nil (throw (ex-info "Empty content entry"
+                                                 {:id id}))
                              stored))}))))
 
   (realize-thunk [this]
@@ -161,6 +161,6 @@
    (let [temp-dir (create-temp-dir parent "documint")]
      (.deleteOnExit temp-dir)
      (map->TemporaryFileStorage
-      {:next-id next-id
+      {:next-id  next-id
        :contents (atom {})
        :temp-dir (create-temp-dir temp-dir "documint")}))))
