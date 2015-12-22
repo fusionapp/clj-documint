@@ -67,18 +67,15 @@
     session-id)
 
   (entry-content [this]
-    (d/chain
-     deferred-result
-     (fn [{:keys [content-type stored]}]
-       {:content-type content-type
-        :stream       (jio/input-stream
-                       (case content-type
-                         nil        (throw (ex-info "Empty content entry"
-                                                    {:id id}))
-                         :exception (throw (ex-info "Entry is an exception"
-                                                    {:id        id
-                                                     :exception stored}))
-                         stored))})))
+    (-> deferred-result
+        (d/chain
+         (fn [{:keys [content-type stored]}]
+           {:content-type content-type
+            :stream       (jio/input-stream
+                           (case content-type
+                             nil        (throw (ex-info "Empty content entry"
+                                                        {:id id}))
+                             stored))}))))
 
   (realize-thunk [this]
     (log/info "Realizing thunk content")
@@ -94,9 +91,7 @@
                          :stored       file}))
           (catch Exception e
             (log/error e "Failed realizing thunk")
-            (d/error! deferred-result
-                      {:content-type :exception
-                       :stored       e}))))))))
+            (d/error! deferred-result e))))))))
 
 
 (defprotocol IStorage

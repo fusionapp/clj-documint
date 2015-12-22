@@ -78,13 +78,30 @@
 
   If found, the content is associated with the `:documint.web/content` key."
   [ctx]
-  (let [id          (get-in ctx [:request :params ::content-id])
-        content     (session/get-content (::session ctx) id)]
-    (if-not (nil? content)
-      [true {:representation {:media-type (:content-type content)}
-             ::content content}]
+  (let [id               (get-in ctx [:request :params ::content-id])
+        deferred-content (session/get-content (::session ctx) id)
+        content          (try
+                           (deref deferred-content 10000 ::no-response)
+                           (catch clojure.lang.ExceptionInfo e
+                             e)
+                           (catch Exception e
+                             e))]
+    (cond
+      (= ::no-response content)
       [false {:representation {:media-type "application/json"}
-              ::causes        [[:unknown-content "Unknown content identifier" id]]}])))
+              ::causes        [[:content-timed-out id]]}]
+
+      (nil? content)
+      [false {:representation {:media-type "application/json"}
+              ::causes        [[:unknown-content "Unknown content identifier" id]]}]
+
+      (instance? Exception content)
+      [false {:representation {:media-type "application/json"}
+              :exception      content}]
+
+      :else
+      [true {:representation {:media-type (:content-type content)}
+             ::content content}])))
 
 
 (defn- cause
@@ -105,10 +122,11 @@
   reasons."
   [ctx]
   (log/error (:exception ctx) "Error handling a web request")
-  (let [exc   (:exception ctx)
-        info  (or (ex-data exc) ctx)
-        causes (get info ::causes
-                    [[:unhandled-exception exc]])]
+  (let [exc    (:exception ctx)
+        causes (or (if exc
+                     (get (ex-data exc) :causes)
+                     (get ctx ::causes))
+                   [[:unhandled-exception exc]])]
     {:causes (map (partial apply cause) causes)}))
 
 
