@@ -4,6 +4,7 @@
             [clojure.java.io :as jio]
             [clojure.tools.logging :as log]
             [ring.util.io :refer [piped-input-stream]]
+            [documint.render :refer [render]]
             [documint.util :refer [wait-close]])
   (:import [java.io InputStream]
            [java.awt Color]
@@ -12,6 +13,17 @@
            [org.apache.pdfbox.pdmodel PDDocument]
            [org.apache.pdfbox.rendering PDFRenderer]
            [org.apache.pdfbox.multipdf PDFMergerUtility]))
+
+
+(defn render-html
+  "Render a PDF document from an HTML source document."
+  [renderer options content]
+  (log/info "Rendering a document"
+            {:options options})
+  (fn [output]
+    (log/spy
+     (render renderer (:stream content) output options))
+    "application/pdf"))
 
 
 (defn concatenate
