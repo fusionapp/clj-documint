@@ -80,9 +80,8 @@
   (let [input  (java.io.PipedInputStream.)
         output (java.io.PipedOutputStream.)]
     (.connect input output)
-    (-> (future
-          (try
-            (func output)
-            (finally (.close output)))
-          input)
-        (d/catch java.util.concurrent.ExecutionException #(throw (.getCause %))))))
+    (future
+      (try
+        (func output)
+        (finally (.close output))))
+    input))
