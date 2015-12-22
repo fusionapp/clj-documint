@@ -13,9 +13,6 @@
             [documint.config :refer [load-config]]))
 
 
-(defonce -session-factory (temp-file-session-factory))
-
-
 (defn- make-app
   ""
   []
@@ -28,7 +25,7 @@
   (let [config (load-config)]
     (web/make-app
      {:renderer        (saucer/renderer (:renderer config {}))
-      :session-factory -session-factory})))
+      :session-factory (temp-file-session-factory)})))
 
 
 (defsystem dev-system

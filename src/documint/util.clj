@@ -62,27 +62,6 @@
    (fn [v]
      (cond
        (map? v)        (transform-map f v)
-       (sequential? v) (map f v)
+       (sequential? v) (mapv f v)
        :else           (f v)))
    m))
-
-
-(defn piped-input-stream
-  "Create an input stream, returned as a Manifold deferred, from a function that
-  takes an output stream.
-
-  The function will be executed on a separate thread, and the stream
-  automatically closed after it finishes.
-
-  This is a variation on `ring.util.io/piped-input-stream`, notably exceptions
-  are not silently swallowed by `future`."
-  [func]
-  (let [input  (java.io.PipedInputStream.)
-        output (java.io.PipedOutputStream.)]
-    (.connect input output)
-    (-> (future
-          (try
-            (func output)
-            (finally (.close output)))
-          input)
-        (d/catch java.util.concurrent.ExecutionException #(throw (.getCause %))))))
