@@ -62,7 +62,7 @@
    (fn [v]
      (cond
        (map? v)        (transform-map f v)
-       (sequential? v) (map f v)
+       (sequential? v) (mapv f v)
        :else           (f v)))
    m))
 
