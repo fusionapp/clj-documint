@@ -37,11 +37,11 @@
         merger  (PDFMergerUtility.)]
     (doseq [^InputStream s streams]
       (.addSource merger s))
-    (piped-input-stream
-     (fn [output]
-       (doto merger
-         (.setDestinationStream output)
-         (.mergeDocuments nil))))))
+    (fn [output]
+      (doto merger
+        (.setDestinationStream output)
+        (.mergeDocuments nil))
+      "application/pdf")))
 
 
 (defn- thumbnail-size
@@ -94,19 +94,18 @@
 
   `breadth` is the widest part of the thumbnail in pixels, the shorter end will
   be scaled accordingly."
-  [breadth format-name content]
+  [breadth content]
   (log/info "Creating thumbnail images")
   (let [doc         (PDDocument/load (:stream content))
         renderer    (PDFRenderer. doc)
         images      (map (partial page-thumbnail doc renderer breadth)
                          (range (.getNumberOfPages doc)))
         done-one    (wait-close doc images)
-        write-image (fn [image]
-                      (piped-input-stream
-                       (fn [output]
-                         (ImageIO/write image format-name output)
-                         (done-one image))))]
-    (map write-image images)))
+        write-image (fn [image output]
+                      (ImageIO/write image "jpg" output)
+                      (done-one image)
+                      "image/jpeg")]
+    (map #(partial write-image %) images)))
 
 
 (defn- page-extractor
@@ -148,13 +147,12 @@
   (let [src-doc   (PDDocument/load (:stream content))
         docs      (map (partial page-extractor src-doc) page-groups)
         done-one  (wait-close src-doc docs)
-        write-doc (fn [doc]
-                    (piped-input-stream
-                     (fn [output]
-                       (.save doc output)
-                       (.close doc)
-                       (done-one doc))))]
-    (map write-doc docs)))
+        write-doc (fn [doc output]
+                    (.save doc output)
+                    (.close doc)
+                    (done-one doc)
+                    "application/pdf")]
+    (map #(partial write-doc %) docs)))
 
 
 (defn metadata
