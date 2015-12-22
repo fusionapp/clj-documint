@@ -232,7 +232,7 @@
   [make-uri response]
   (transform-map
    (fn [v]
-     (if (satisfies? content/IContent v)
+     (if (satisfies? content/IStorageEntry v)
        (make-uri v)
        v))
    response))

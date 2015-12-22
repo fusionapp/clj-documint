@@ -1,11 +1,15 @@
 (ns documint.actions
-  "Documint actions.")
+  "Documint actions."
+  (:require [clojure.tools.logging :as log]
+            [manifold.deferred :as d]
+            [documint.content :as content]
+            [documint.util :refer [transform-map]]))
 
 
 (defprotocol IAction
-  ""
+  "Documint action."
   (perform [this state session parameters]
-   ""))
+    "Perform this action."))
 
 
 (defonce -known-actions (atom {}))
@@ -22,5 +26,16 @@
 
 (defn perform-action
   "Perform an `IAction` by name."
-  [action parameters session state]
-  (perform (get @-known-actions action) state session parameters))
+  [action-name parameters session state]
+  (let [action (get @-known-actions action-name)]
+    (-> (perform action state session parameters)
+        (d/chain
+         (fn [response]
+           (future
+             (transform-map
+              (fn [x]
+                (when (satisfies? content/IStorageEntry x)
+                  (content/realize-thunk x))
+                x)
+              response))
+           response)))))

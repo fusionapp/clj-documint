@@ -11,19 +11,22 @@
 (defprotocol ISession
   "Session."
   (session-id [this]
-   "Retrieve the identifier for this session.")
+    "Retrieve the identifier for this session.")
 
   (destroy [this]
-   "Destroy this session and its storage.")
+    "Destroy this session and its storage.")
+
+  (allocate-thunk [this thunk]
+    "Allocate a `IStorageEntry` for a thunk.")
 
   (get-content [this content-id]
-   "Retrieve the content of an entry from storage for this session.
+    "Retrieve the content of an entry from storage for this session.
 
     Responses are a map containing `:stream` and `:content-type` keys, or the
     response is `nil` if no such content identifier exists.")
 
   (put-content [this content-type readable]
-   "Create a storage entry."))
+    "Create a storage entry."))
 
 
 (defrecord Session [id destroy storage]
@@ -37,6 +40,9 @@
     (content/destroy storage)
     (destroy))
 
+  (allocate-thunk [this thunk]
+    (content/allocate-entry storage id thunk))
+
   (get-content [this content-id]
     (content/get-content storage content-id))
 
@@ -47,13 +53,13 @@
 (defprotocol ISessionFactory
   "Session factory."
   (new-session [this]
-   "Create a new session.")
+    "Create a new session.")
 
   (get-session [this id]
-   "Retrieve an existing session by `id`.")
+    "Retrieve an existing session by `id`.")
 
   (destroy-session [this id]
-   "Destroy a session."))
+    "Destroy a session."))
 
 
 (defrecord SessionFactory [next-id sessions storage-factory]
