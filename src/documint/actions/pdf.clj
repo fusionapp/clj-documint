@@ -86,8 +86,26 @@
   Parameters:
     `input`: URI to a PDF document."
   (reify IAction
-    (perform [this state session {:keys [input]}]
+    (perform [this session {:keys [input]}]
       (d/chain (fetch-content input)
                pdf/metadata
                (fn [body]
                  {:body body})))))
+
+
+(def sign
+  "Digitally sign one or more PDF documents.
+
+  Parameters:
+    `inputs`: Vector of URIs to PDF documents to be digitally signed.
+    `certificate-alias`: Alias of the certificate in the keystore to use for
+    signing.
+    `reason`: PDF signature reason."
+  (reify IAction
+    (perform [this session {:keys [inputs certificate-alias location reason]
+                            :or   {reason "No reason specified"}}]
+      (d/chain (fetch-multiple-contents inputs)
+               (partial pdf/sign (:signer system) certificate-alias location reason)
+               (partial allocate-thunks session)
+               (fn [contents]
+                 {:links {:results contents}})))))

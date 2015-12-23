@@ -4,6 +4,7 @@
             [clojure.java.io :as jio]
             [clojure.tools.logging :as log]
             [ring.util.io :refer [piped-input-stream]]
+            [documint.pdf.signing :as signing]
             [documint.render :refer [render]]
             [documint.util :refer [wait-close]])
   (:import [java.io InputStream]
@@ -170,8 +171,18 @@
        :producer   (.getProducer info)})))
 
 
-(defn shrink
+(defn sign
   ""
-  [content quality]
-  ; https://github.com/bnanes/shrink-pdf/blob/master/src/main/java/edu/emory/cellbio/ShrinkPDF.java
-  )
+  [signer certificate-alias location reason contents]
+  (log/info "Signing documents"
+            {:certificate-alias certificate-alias})
+  (let [sign-doc (fn [content output]
+                   (with-open [doc (PDDocument/load (:stream content))]
+                     (signing/sign-document signer
+                                            doc
+                                            certificate-alias
+                                            location
+                                            reason
+                                            output))
+                   "application/pdf")]
+    (map #(partial sign-doc %) contents)))

@@ -10,6 +10,7 @@
             [documint.session :refer [temp-file-session-factory]]
             [documint.actions.pdf :as pdf-actions]
             [documint.config :refer [load-config]]
+            [documint.pdf.signing :as signing]
             [documint.util :refer [open-keystore]]))
 
 
@@ -22,6 +23,10 @@
                                      (:keystore-password config))
      :session-factory (temp-file-session-factory)
      :renderer        (saucer/renderer (:renderer config {}))
+     :signer          (component/using
+                       (signing/signer-component
+                        (get-in config [:signing :certificate-passwords] {}))
+                       [:keystore])
      :app             (component/using
                        (web/new-app)
                        [:session-factory])
