@@ -3,25 +3,9 @@
 
   `IStorage` implements the public API for interacting with storage."
   (:require [clojure.java.io :as jio]
-            [clojure.tools.logging :as log]))
-
-
-(defprotocol IContent
-  "Stored content item."
-  (content-id [this]
-   "Retrieve the identifier for this content.")
-
-  (session-id [this]
-   "Retrieve the session identifier for this content."))
-
-
-(defrecord LocalContent [id session-id content-type file]
-  IContent
-  (content-id [this]
-    id)
-
-  (session-id [this]
-    session-id))
+            [clojure.tools.logging :as log]
+            [ring.util.io :refer [piped-input-stream]]
+            [manifold.deferred :as d]))
 
 
 (defn- tmpdir
@@ -56,19 +40,76 @@
   (jio/delete-file root))
 
 
+(defprotocol IStorageEntry
+  ""
+  (content-id [this]
+    "Identifier for this content.")
+
+  (session-id [this]
+    "Session identifier for this content.")
+
+  (entry-content [this]
+    "Fetch the content for this entry.
+
+    The result is a deferred map containing `:stream` and `:content-type` keys,
+    or the response is `nil` if no such content identifier exists.")
+
+  (realize-thunk [this]
+    "Realize the entry's thunk."))
+
+
+(defrecord LocalEntry [id session-id store-fn file deferred-result thunk]
+  IStorageEntry
+  (content-id [this]
+    id)
+
+  (session-id [this]
+    session-id)
+
+  (entry-content [this]
+    (-> deferred-result
+        (d/chain
+         (fn [{:keys [content-type stored]}]
+           {:content-type content-type
+            :stream       (jio/input-stream
+                           (case content-type
+                             nil (throw (ex-info "Empty content entry"
+                                                 {:id id}))
+                             stored))}))))
+
+  (realize-thunk [this]
+    (log/info "Realizing thunk content")
+    (store-fn
+     (piped-input-stream
+      (fn [output]
+        (try
+          (let [content-type (thunk output)]
+            (log/info "Successfully realized thunk"
+                      {:content-type content-type})
+            (d/success! deferred-result
+                        {:content-type content-type
+                         :stored       file}))
+          (catch Exception e
+            (log/error e "Failed realizing thunk")
+            (d/error! deferred-result e))))))))
+
+
 (defprotocol IStorage
   "Content storage."
   (destroy [this]
-   "Destroy this storage.")
+    "Destroy this storage.")
 
-  (get-content [this content-id]
-   "Retrieve the content of an entry from storage.
+  (get-content [this entry-id]
+    "Retrieve the content of an entry from storage.
 
-    Responses are a map containing `:stream` and `:content-type` keys, or the
-    response is `nil` if no such content identifier exists.")
+     The result is a deferred map containing `:stream` and `:content-type` keys,
+     or the response is `nil` if no such content identifier exists.")
+
+  (allocate-entry [this session-id thunk]
+    "Allocate a content entry, the result is a `IStorageEntry`.")
 
   (put-content [this session-id content-type readable]
-   "Create a storage entry."))
+    "Allocate and realize a content entry."))
 
 
 (defrecord TemporaryFileStorage [next-id contents temp-dir]
@@ -79,28 +120,35 @@
     (delete-temp-dir temp-dir)
     (reset! contents {}))
 
-  (get-content [this content-id]
-    ; XXX: If we're storing the contents asynchronously, then we need some way
-    ; to wait on this completing before reading it.
-    (log/info "Retrieving content"
-              {:id content-id})
-    (if-let [entry (get @contents content-id)]
-      {:stream       (jio/input-stream (:file entry))
-       :content-type (:content-type entry)}
+  (allocate-entry [this session-id thunk]
+    (let [id       (next-id)
+          f        (create-temp-file temp-dir id)
+          store-fn (fn [input]
+                     (jio/copy input f))
+          entry    (map->LocalEntry {:id              id
+                                     :session-id      session-id
+                                     :deferred-result (d/deferred)
+                                     :thunk           thunk
+                                     :store-fn        store-fn
+                                     :file            f})]
+      (log/info "Allocated content entry" entry)
+      (swap! contents assoc id entry)
+      entry))
+
+  (get-content [this entry-id]
+    (log/info "Retrieving entry content"
+              {:id entry-id})
+    (if-let [entry (get @contents entry-id)]
+      (entry-content entry)
       nil))
 
   (put-content [this session-id content-type readable]
-    (let [id    (next-id)
-          f     (create-temp-file temp-dir id)
-          entry (map->LocalContent {:id           id
-                                    :session-id   session-id
-                                    :content-type content-type
-                                    :file         f})]
-      ; XXX: Maybe this should happen asynchronously?
-      (log/info "Storing content" entry)
-      (log/spy (do
-                 (jio/copy readable f)
-                 (swap! contents assoc id entry)))
+    (let [entry (allocate-entry this
+                                session-id
+                                (fn [output]
+                                  (jio/copy readable output)
+                                  content-type))]
+      (realize-thunk entry)
       entry)))
 
 
@@ -113,6 +161,6 @@
    (let [temp-dir (create-temp-dir parent "documint")]
      (.deleteOnExit temp-dir)
      (map->TemporaryFileStorage
-      {:next-id next-id
+      {:next-id  next-id
        :contents (atom {})
        :temp-dir (create-temp-dir temp-dir "documint")}))))

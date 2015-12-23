@@ -2,21 +2,18 @@
   "Documint PDF actions.
 
   A collection of `IAction` implementations for manipulating PDF documents."
-  (:require [manifold.deferred :as d]
-            [documint.render :as render]
+  (:require [clojure.tools.logging :as log]
+            [manifold.deferred :as d]
             [documint.session :as session]
             [documint.pdf :as pdf]
             [documint.actions :refer [IAction]]
             [documint.util :refer [fetch-content fetch-multiple-contents]]))
 
 
-(defn- put-multiple-contents
-  "Store multiple contents of the same content-type in a session.
-
-  Returns a seq of the stored contents."
-  [session content-type streams]
-  (map (partial session/put-content session content-type)
-       streams))
+(defn allocate-thunks
+  "Allocate storage entries for multiple thunks."
+  [session thunks]
+  (map (partial session/allocate-thunk session) thunks))
 
 
 (def render-html
@@ -28,13 +25,11 @@
   (reify IAction
     (perform [this {renderer :renderer} session {:keys [input base-uri]}]
       (d/chain (fetch-content input)
-               (partial render/render-html renderer {:base-uri base-uri})
-               (fn [stream]
-                 {:links
-                  {:result
-                   [(session/put-content session
-                                         "application/pdf"
-                                         stream)]}})))))
+               (partial pdf/render-html renderer {:base-uri base-uri})
+               vector
+               (partial allocate-thunks session)
+               (fn [content]
+                 {:links {:result content}})))))
 
 
 (def concatenate
@@ -46,12 +41,10 @@
     (perform [this state session {:keys [inputs]}]
       (d/chain (fetch-multiple-contents inputs)
                pdf/concatenate
-               (fn [stream]
-                 {:links
-                  {:result
-                   [(session/put-content session
-                                         "application/pdf"
-                                         stream)]}})))))
+               vector
+               (partial allocate-thunks session)
+               (fn [content]
+                 {:links {:result content}})))))
 
 
 (def thumbnails
@@ -64,12 +57,10 @@
   (reify IAction
     (perform [this state session {:keys [input breadth]}]
       (d/chain (fetch-content input)
-               (partial pdf/thumbnails breadth "jpg")
-               (fn [streams]
-                 {:links
-                  {:results (put-multiple-contents session
-                                                   "image/jpeg"
-                                                   streams)}})))))
+               (partial pdf/thumbnails breadth)
+               (partial allocate-thunks session)
+               (fn [contents]
+                 {:links {:results contents}})))))
 
 
 (def split
@@ -84,11 +75,9 @@
     (perform [this state session {:keys [input page-groups]}]
       (d/chain (fetch-content input)
                (partial pdf/split page-groups)
-               (fn [streams]
-                 {:links
-                  {:results (put-multiple-contents session
-                                                   "application/pdf"
-                                                   streams)}})))))
+               (partial allocate-thunks session)
+               (fn [contents]
+                 {:links {:results contents}})))))
 
 
 (def metadata
@@ -100,5 +89,5 @@
     (perform [this state session {:keys [input]}]
       (d/chain (fetch-content input)
                pdf/metadata
-               (fn [result]
-                 {:body result})))))
+               (fn [body]
+                 {:body body})))))

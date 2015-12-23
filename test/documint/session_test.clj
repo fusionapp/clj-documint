@@ -1,6 +1,7 @@
 (ns documint.session-test
   "Tests for `documint.session`."
   (:require [documint.session :as session]
+            [manifold.deferred :as d]
             [clojure.test :refer [deftest testing is]]))
 
 
@@ -11,8 +12,7 @@
   [n]
   (let [counter (atom n)]
     (fn []
-      (swap! counter inc)
-      (str @counter))))
+      (str (swap! counter inc)))))
 
 
 (deftest temp-file-session-factory
@@ -24,13 +24,20 @@
       (is (= session
              (session/get-session session-factory (:id session))))))
 
+  (testing "allocate-thunk"
+    (let [session-factory (session/temp-file-session-factory (counter 1000))
+          session         (session/new-session session-factory)
+          entry           (session/allocate-thunk session nil)]
+      (is (= "1002"
+             (:id entry)))
+      (is (= false
+             (d/realized? (:deferred-result entry))))))
+
   (testing "get-content / put-content"
     (let [session-factory (session/temp-file-session-factory (counter 1000))
           session         (session/new-session session-factory)
           entry           (session/put-content session "text/plain" "hello")
-          content         (session/get-content session (:id entry))]
-      (is (= "text/plain"
-             (:content-type entry)))
+          content         @(session/get-content session (:id entry))]
       (is (= "text/plain"
              (:content-type content)))
       (is (= "hello"
