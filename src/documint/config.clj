@@ -5,7 +5,7 @@
             [clojure.tools.logging :as log]))
 
 
-(def -default-config {})
+(def ^:private default-config {})
 
 
 (defn- user-home
@@ -23,11 +23,15 @@
 (defn parse-config
   "Parse a config file as JSON."
   [file]
-  (log/info "Trying config file"
-            file)
   (if (.exists file)
-    (json/read (jio/reader file) :key-fn keyword)
-    {}))
+    (do
+      (log/info "Reading config file"
+                file)
+      (json/read (jio/reader file) :key-fn keyword))
+    (do
+      (log/info "Skipping nonexistent config file"
+                file)
+      {})))
 
 
 (defn load-config
@@ -36,8 +40,8 @@
   (log/info "Loading configuration")
   (let [known-paths [(jio/file (user-home) ".config" "documint" "config.json")
                      (jio/file (run-dir) "documint.config.json")]]
-    (reduce
-     (fn [config f]
-       (merge config (parse-config f)))
-     -default-config
-     known-paths)))
+    (log/spy (reduce
+              (fn [config f]
+                (merge config (parse-config f)))
+              default-config
+              known-paths))))

@@ -3,7 +3,8 @@
   (:require [clojure.tools.logging :as log]
             [clj-uuid :as uuid]
             [aleph.http :as http]
-            [manifold.deferred :as d]))
+            [manifold.deferred :as d])
+  (:import [java.security KeyStore]))
 
 
 (defn uuid-str
@@ -65,3 +66,18 @@
        (sequential? v) (mapv f v)
        :else           (f v)))
    m))
+
+
+(defn open-keystore
+  "Open a `Keystore`."
+  [f ^String password]
+  (log/info "Opening keystore"
+            {:f f})
+  (with-open [input (clojure.java.io/input-stream f)]
+    (let [keystore (KeyStore/getInstance (KeyStore/getDefaultType))]
+      (try
+        (.load keystore input (.toCharArray password))
+        (catch Exception e
+          (throw (ex-info "Invalid keystore"
+                          {:causes [[:invalid-keystore (.getMessage e)]]}))))
+      keystore)))

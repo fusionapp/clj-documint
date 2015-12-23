@@ -1,12 +1,11 @@
 (set-env!
  :resource-paths #{"src"}
  :dependencies '[[org.clojure/clojure "1.7.0"]
-                 [org.clojure/core.async "0.2.371"]
                  [org.clojure/tools.cli "0.3.3"]
                  [org.clojure/tools.logging "0.3.1"]
                  [org.clojure/tools.nrepl "0.2.11"]
-                 [org.danielsz/system "0.1.9"]
-                 [org.xhtmlrenderer/flying-saucer-pdf "9.0.8"]
+                 [org.danielsz/system "0.2.0"]
+                 [org.xhtmlrenderer/flying-saucer-pdf-itext5 "9.0.8"]
                  [ring/ring-defaults "0.1.5"]
                  [ring/ring-jetty-adapter "1.3.2"]
                  [ring/ring-core "1.4.0"]
@@ -19,6 +18,8 @@
                  [danielsz/boot-environ "0.0.5"]
                  [manifold "0.1.1"]
                  [org.apache.pdfbox/pdfbox "2.0.0-RC2"]
+                 [org.bouncycastle/bcpkix-jdk15on "1.47"]
+                 [org.bouncycastle/bcprov-jdk15on "1.47"]
                  ])
 
 

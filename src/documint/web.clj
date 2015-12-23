@@ -38,6 +38,7 @@
     Remove a session and all its contents. "
   (:require [clojure.data.json :as json]
             [clojure.tools.logging :as log]
+            [com.stuartsierra.component :as component]
             [liberator.core :refer [defresource]]
             [liberator.dev :refer [wrap-trace]]
             [bidi.bidi :as bidi]
@@ -215,7 +216,7 @@
      [true ctx] (reverse fs))))
 
 
-(defresource session-index [{:keys [session-factory]}]
+(defresource session-index [session-factory]
   :available-media-types ["application/json"]
   :allowed-methods [:post]
   :handle-exception error-response
@@ -226,7 +227,7 @@
     {:location (session-uri ctx (session/new-session session-factory))}))
 
 
-(defresource session-resource [{:keys [session-factory]}]
+(defresource session-resource [session-factory]
   :available-media-types ["application/json"]
   :allowed-methods [:get :delete]
   :handle-exception error-response
@@ -254,8 +255,7 @@
    response))
 
 
-(defresource session-perform [{:keys [session-factory]
-                               :as state}]
+(defresource session-perform [session-factory]
   :available-media-types ["application/json"]
   :allowed-methods [:post]
   :handle-exception error-response
@@ -270,7 +270,7 @@
                 parameters]} ::data
         :as                  ctx}]
     (let [make-uri (partial content-uri ctx)
-          outputs  (perform-action action parameters session state)
+          outputs  (perform-action action parameters session)
           d        (d/chain outputs
                             #(transform-response make-uri %)
                             #(assoc {} ::response %))
@@ -278,12 +278,12 @@
           response (deref d 10000 ::no-response)]
       (if (= ::no-response response)
         (throw (ex-info "Performing an action timed out"
-                        {::causes [[:perform-timed-out action]]}))
+                        {:causes [[:perform-timed-out action]]}))
         response)))
   :handle-created ::response)
 
 
-(defresource content-index [{:keys [session-factory]}]
+(defresource content-index [session-factory]
   :available-media-types ["*"]
   :allowed-methods [:post]
   :handle-exception error-response
@@ -302,7 +302,7 @@
   :handle-created ::response)
 
 
-(defresource content-resource [{:keys [session-factory]}]
+(defresource content-resource [session-factory]
   :available-media-types ["*"]
   :allowed-methods [:get]
   :handle-exception error-response
@@ -314,18 +314,27 @@
 
 (defn route-handlers
   ""
-  [state]
-  {::session-index    (session-index state)
-   ::session-resource (session-resource state)
-   ::session-perform  (session-perform state)
-   ::content-index    (content-index state)
-   ::content-resource (content-resource state)})
+  [session-factory]
+  {::session-index    (session-index session-factory)
+   ::session-resource (session-resource session-factory)
+   ::session-perform  (session-perform session-factory)
+   ::content-index    (content-index session-factory)
+   ::content-resource (content-resource session-factory)})
 
 
-(defn make-app
-  "Create the web service application."
-  [state]
-  (let [handlers (route-handlers state)]
-    (-> (make-handler routes handlers)
-        #_(wrap-trace :header :ui)
-        (wrap-defaults api-defaults))))
+(defrecord App [app session-factory]
+  component/Lifecycle
+  (start [this]
+    (let [handlers (route-handlers session-factory)]
+      (assoc this :app
+             (-> (make-handler routes handlers)
+                 #_(wrap-trace :header :ui)
+                 (wrap-defaults api-defaults)))))
+
+  (stop [this]
+    this))
+
+
+(defn new-app
+  []
+  (map->App {}))
