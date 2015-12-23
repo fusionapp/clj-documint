@@ -1,39 +1,37 @@
 (ns documint.systems
   "Documint system definitions."
-  (:require [system.core :refer [defsystem]]
+  (:require [com.stuartsierra.component :as component]
+            [system.core :refer [defsystem]]
             (system.components
-             [jetty :refer [new-web-server]]
-             #_[aleph :refer [new-web-server]])
+             [jetty :refer [new-web-server]])
             [environ.core :refer [env]]
             [documint.web :as web]
             [documint.render.flying-saucer :as saucer]
             [documint.session :refer [temp-file-session-factory]]
-            [documint.actions :refer [register-actions!]]
             [documint.actions.pdf :as pdf-actions]
-            [documint.config :refer [load-config]]))
+            [documint.config :refer [load-config]]
+            [documint.util :refer [open-keystore]]))
 
 
-(defn- make-app
+(defn dev-system
   ""
   []
-  (register-actions!
-   {"render-html" pdf-actions/render-html
-    "concat"      pdf-actions/concatenate
-    "thumbnails"  pdf-actions/thumbnails
-    "split"       pdf-actions/split
-    "metadata"    pdf-actions/metadata})
   (let [config (load-config)]
-    (web/make-app
-     {:renderer        (saucer/renderer (:renderer config {}))
-      :session-factory (temp-file-session-factory)})))
+    (component/system-map
+     :keystore        (open-keystore (:keystore-path config)
+                                     (:keystore-password config))
+     :session-factory (temp-file-session-factory)
+     :renderer        (saucer/renderer (:renderer config {}))
+     :app             (component/using
+                       (web/new-app)
+                       [:session-factory])
+     :web             (component/using
+                       (new-web-server (Integer. (env :documint-port)))
+                       {:handler :app})
+     )))
 
 
-(defsystem dev-system
-  [:web (new-web-server (Integer. (env :documint-port))
-                        (make-app))])
-
-
-(defsystem prod-system
+#_(defsystem prod-system
   [:web (new-web-server (Integer. (env :documint-port))
                         (make-app))])
 

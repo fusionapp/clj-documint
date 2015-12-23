@@ -2,11 +2,11 @@
   "Documint PDF actions.
 
   A collection of `IAction` implementations for manipulating PDF documents."
-  (:require [clojure.tools.logging :as log]
+  (:require [reloaded.repl :refer [system]]
             [manifold.deferred :as d]
             [documint.session :as session]
             [documint.pdf :as pdf]
-            [documint.actions :refer [IAction]]
+            [documint.actions.interfaces :refer [IAction]]
             [documint.util :refer [fetch-content fetch-multiple-contents]]))
 
 
@@ -23,9 +23,9 @@
     `input`: URI to the HTML content to render.
     `base-uri`: Base URI to use when resolving relative URIs."
   (reify IAction
-    (perform [this {renderer :renderer} session {:keys [input base-uri]}]
+    (perform [this session {:keys [input base-uri]}]
       (d/chain (fetch-content input)
-               (partial pdf/render-html renderer {:base-uri base-uri})
+               (partial pdf/render-html (:renderer system) {:base-uri base-uri})
                vector
                (partial allocate-thunks session)
                (fn [content]
@@ -38,7 +38,7 @@
   Parameters:
     `inputs`: A list of URIs to PDF documents."
   (reify IAction
-    (perform [this state session {:keys [inputs]}]
+    (perform [this session {:keys [inputs]}]
       (d/chain (fetch-multiple-contents inputs)
                pdf/concatenate
                vector
@@ -55,7 +55,7 @@
     `breadth`: Widest part of the thumbnail in pixels, the shorter end will be
         scaled accordingly."
   (reify IAction
-    (perform [this state session {:keys [input breadth]}]
+    (perform [this session {:keys [input breadth]}]
       (d/chain (fetch-content input)
                (partial pdf/thumbnails breadth)
                (partial allocate-thunks session)
@@ -72,7 +72,7 @@
         represents a document containing only those pages from the original document,
         in the order they are specified."
   (reify IAction
-    (perform [this state session {:keys [input page-groups]}]
+    (perform [this session {:keys [input page-groups]}]
       (d/chain (fetch-content input)
                (partial pdf/split page-groups)
                (partial allocate-thunks session)

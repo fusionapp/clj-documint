@@ -1,34 +1,26 @@
 (ns documint.actions
   "Documint actions."
-  (:require [clojure.tools.logging :as log]
-            [manifold.deferred :as d]
+  (:require [manifold.deferred :as d]
+            [documint.actions.interfaces :refer [perform]]
+            [documint.actions.pdf :as pdf-actions]
             [documint.content :as content]
             [documint.util :refer [transform-map]]))
 
 
-(defprotocol IAction
-  "Documint action."
-  (perform [this state session parameters]
-    "Perform this action."))
-
-
-(defonce -known-actions (atom {}))
-
-
-(defn register-actions!
-  "Register known actions.
-
-  `actions` is a map of action names to `IAction` implementations to be merged
-  with the current known actions."
-  [actions]
-  (swap! -known-actions merge actions))
+(def ^:private known-actions
+  {"render-html" pdf-actions/render-html
+   "concat"      pdf-actions/concatenate
+   "thumbnails"  pdf-actions/thumbnails
+   "split"       pdf-actions/split
+   "metadata"    pdf-actions/metadata
+   "sign"        pdf-actions/sign})
 
 
 (defn perform-action
   "Perform an `IAction` by name."
-  [action-name parameters session state]
-  (let [action (get @-known-actions action-name)]
-    (-> (perform action state session parameters)
+  [action-name parameters session]
+  (if-let [action (get known-actions action-name)]
+    (-> (perform action session parameters)
         (d/chain
          (fn [response]
            (future
@@ -38,4 +30,6 @@
                   (content/realize-thunk x))
                 x)
               response))
-           response)))))
+           response)))
+    (throw (ex-info "Unknown action"
+                    {:causes [[:unknown-action action-name]]}))))
