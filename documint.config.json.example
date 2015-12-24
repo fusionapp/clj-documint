@@ -1,5 +1,14 @@
 {
+    "keystore": {
+        "path": "/path/to/keystore",
+        "password": "keystore password"
+    },
+    "signing": {
+        "certificate-passwords": {
+            "selfsigned": "certificate password"
+        }
+    },
     "renderer": {
-        "font-path": "/Users/jonathan/.fonts"
+        "font-path": "/path/to/additional/fonts"
     }
 }
