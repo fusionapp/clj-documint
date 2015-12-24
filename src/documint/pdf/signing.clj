@@ -92,7 +92,6 @@
         (doto signature
           (.setFilter PDSignature/FILTER_ADOBE_PPKLITE)
           (.setSubFilter PDSignature/SUBFILTER_ADBE_PKCS7_DETACHED)
-          (.setName "XXX SOME NAME XXX")
           (.setLocation location)
           (.setReason reason)
           (.setSignDate (Calendar/getInstance)))
