@@ -16,6 +16,23 @@
    "sign"        pdf-actions/sign})
 
 
+(defn- realize-response
+  "Realize the result of `IAction/perform`.
+
+  Any `IStorageEntry` values will be realized via
+  `documint.content/realize-thunk`. Returns a map with the same structure as the
+  original response."
+  [response]
+  (future
+    (transform-map
+     (fn [x]
+       (if (satisfies? content/IStorageEntry x)
+         (content/realize-thunk x)
+         x))
+     response))
+  response)
+
+
 (defn perform-action
   "Perform an `IAction` by name."
   [action-name parameters session]

@@ -91,7 +91,8 @@
                          :stored       file}))
           (catch Exception e
             (log/error e "Failed realizing thunk")
-            (d/error! deferred-result e))))))))
+            (d/error! deferred-result e))))))
+    this))
 
 
 (defprotocol IStorage
@@ -148,8 +149,7 @@
                                 (fn [output]
                                   (jio/copy readable output)
                                   content-type))]
-      (realize-thunk entry)
-      entry)))
+      (realize-thunk entry))))
 
 
 (defn temp-file-storage
