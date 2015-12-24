@@ -19,8 +19,8 @@
   []
   (let [config (load-config)]
     (component/system-map
-     :keystore        (open-keystore (:keystore-path config)
-                                     (:keystore-password config))
+     :keystore        (open-keystore (get-in config [:keystore :path])
+                                     (get-in config [:keystore :password]))
      :session-factory (temp-file-session-factory)
      :renderer        (saucer/renderer (:renderer config {}))
      :signer          (component/using
