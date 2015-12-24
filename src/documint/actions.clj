@@ -1,7 +1,8 @@
 (ns documint.actions
   "Documint actions."
   (:require [manifold.deferred :as d]
-            [documint.actions.interfaces :refer [perform]]
+            [schema.core :as s]
+            [documint.actions.interfaces :refer [perform schema]]
             [documint.actions.pdf :as pdf-actions]
             [documint.content :as content]
             [documint.util :refer [transform-map]]))
@@ -37,16 +38,16 @@
   "Perform an `IAction` by name."
   [action-name parameters session]
   (if-let [action (get known-actions action-name)]
-    (-> (perform action session parameters)
-        (d/chain
-         (fn [response]
-           (future
-             (transform-map
-              (fn [x]
-                (when (satisfies? content/IStorageEntry x)
-                  (content/realize-thunk x))
-                x)
-              response))
-           response)))
+    (try
+      (d/chain (perform action session (s/validate (schema action) parameters))
+               realize-response)
+      (catch clojure.lang.ExceptionInfo e
+        (let [data (ex-data e)]
+          (throw
+           (if (= (:type data) :schema.core/error)
+             (ex-info "Schema validation failure"
+                      {:causes [[:validation-failure
+                                 (select-keys data [:error])]]})
+             e)))))
     (throw (ex-info "Unknown action"
                     {:causes [[:unknown-action action-name]]}))))
