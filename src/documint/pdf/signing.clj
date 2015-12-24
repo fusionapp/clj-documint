@@ -1,5 +1,7 @@
 (ns documint.pdf.signing
-  ""
+  "PDF document signatures.
+
+  Largely based off <https://github.com/apache/pdfbox/blob/2.0.0-RC2/examples/src/main/java/org/apache/pdfbox/examples/signature/CreateSignatureBase.java>"
   (:require [clojure.tools.logging :as log]
             [com.stuartsierra.component :as component])
   (:import [java.util Calendar]
@@ -25,7 +27,6 @@
             SignatureInterface]))
 
 
-; https://github.com/apache/pdfbox/blob/2.0.0-RC2/examples/src/main/java/org/apache/pdfbox/examples/signature/CreateSignatureBase.java
 
 (defrecord CMSProcessableInputStream [^ASN1ObjectIdentifier content-type
                                       ^java.io.InputStream input-stream]
@@ -50,7 +51,8 @@
 
 
 (defn- bouncy-castle-signature-interface
-  ""
+  "Construct an instance of a `SignatureInterface` implementation using Bouncy
+  Castle."
   [certificate-chain private-key]
   (let [store  (JcaCertStore. (vec certificate-chain))
         gen    (CMSSignedDataGenerator.)
@@ -72,14 +74,14 @@
       (sign [this content]
         (let [msg         (cms-processable-input-stream content)
               signed-data (.generate gen msg false)]
-          ; http://stackoverflow.com/questions/30400728/signing-pdf-with-pdfbox-and-bouncycastle
+          ; XXX: Is this a legitimate concern? <http://stackoverflow.com/questions/30400728/signing-pdf-with-pdfbox-and-bouncycastle>
           (.getEncoded signed-data))))))
 
 
 (defprotocol ISigner
-  ""
+  "Document signer."
   (sign-document [this document certificate-alias location reason output]
-   ""))
+    "Sign a `PDDocument` with the specified certificate."))
 
 
 (defrecord SignerComponent [provider sig-ifaces certificate-passwords keystore]
@@ -90,11 +92,10 @@
         (doto signature
           (.setFilter PDSignature/FILTER_ADOBE_PPKLITE)
           (.setSubFilter PDSignature/SUBFILTER_ADBE_PKCS7_DETACHED)
-          (.setName "XXX SOME NAME XXX")
           (.setLocation location)
           (.setReason reason)
           (.setSignDate (Calendar/getInstance)))
-                                        ; XXX: Protect the document?
+        ; XXX: Protect the document?
         (doto document
           (.addSignature signature sig-iface)
           (.saveIncremental output)))
@@ -130,7 +131,7 @@
 
 
 (defn signer-component
-  ""
+  "Create a `SignerComponent`."
   [certificate-passwords]
   (map->SignerComponent
    {:certificate-passwords certificate-passwords}))

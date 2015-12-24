@@ -22,6 +22,7 @@
                  [org.apache.pdfbox/pdfbox "2.0.0-RC2"]
                  [org.bouncycastle/bcpkix-jdk15on "1.47"]
                  [org.bouncycastle/bcprov-jdk15on "1.47"]
+                 [prismatic/schema "1.0.4"]
                  ]
   :plugins [[lein-environ "1.0.0"]]
   :jvm-opts ["-Djava.awt.headless=true"]

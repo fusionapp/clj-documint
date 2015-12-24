@@ -4,9 +4,11 @@
   A collection of `IAction` implementations for manipulating PDF documents."
   (:require [reloaded.repl :refer [system]]
             [manifold.deferred :as d]
+            [schema.core :as s]
             [documint.session :as session]
             [documint.pdf :as pdf]
             [documint.actions.interfaces :refer [IAction]]
+            [documint.schema :refer [uri?]]
             [documint.util :refer [fetch-content fetch-multiple-contents]]))
 
 
@@ -23,6 +25,10 @@
     `input`: URI to the HTML content to render.
     `base-uri`: Base URI to use when resolving relative URIs."
   (reify IAction
+    (schema [this]
+      {:input                     uri?
+       (s/optional-key :base-uri) uri?})
+
     (perform [this session {:keys [input base-uri]}]
       (d/chain (fetch-content input)
                (partial pdf/render-html (:renderer system) {:base-uri base-uri})
@@ -38,6 +44,9 @@
   Parameters:
     `inputs`: A list of URIs to PDF documents."
   (reify IAction
+    (schema [this]
+      {:inputs [uri?]})
+
     (perform [this session {:keys [inputs]}]
       (d/chain (fetch-multiple-contents inputs)
                pdf/concatenate
@@ -55,6 +64,10 @@
     `breadth`: Widest part of the thumbnail in pixels, the shorter end will be
         scaled accordingly."
   (reify IAction
+    (schema [this]
+      {:input   uri?
+       :breadth long})
+
     (perform [this session {:keys [input breadth]}]
       (d/chain (fetch-content input)
                (partial pdf/thumbnails breadth)
@@ -72,6 +85,10 @@
         represents a document containing only those pages from the original document,
         in the order they are specified."
   (reify IAction
+    (schema [this]
+      {:input       uri?
+       :page-groups [[long]]})
+
     (perform [this session {:keys [input page-groups]}]
       (d/chain (fetch-content input)
                (partial pdf/split page-groups)
@@ -86,6 +103,9 @@
   Parameters:
     `input`: URI to a PDF document."
   (reify IAction
+    (schema [this]
+      {:input uri?})
+
     (perform [this session {:keys [input]}]
       (d/chain (fetch-content input)
                pdf/metadata
@@ -102,8 +122,12 @@
     signing.
     `reason`: PDF signature reason."
   (reify IAction
-    (perform [this session {:keys [inputs certificate-alias location reason]
-                            :or   {reason "No reason specified"}}]
+    (schema [this]
+      {:inputs            [uri?]
+       :certificate-alias s/Str
+       :location          s/Str
+       :reason            s/Str})
+    (perform [this session {:keys [inputs certificate-alias location reason]}]
       (d/chain (fetch-multiple-contents inputs)
                (partial pdf/sign (:signer system) certificate-alias location reason)
                (partial allocate-thunks session)
