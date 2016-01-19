@@ -6,13 +6,13 @@
 
 
 (defn x-object-length
-  ""
+  "Determine the length in bytes of a `PDXObject`."
   [x-obj]
   (.. x-obj getStream getLength))
 
 
 (defn x-image-dpi
-  ""
+  "Calculate the DPI of an image on a page."
   ([page ^PDImageXObject x-img]
    (x-image-dpi page x-img (.getWidth x-img) (.getHeight x-img)))
 
