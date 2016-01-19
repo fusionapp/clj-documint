@@ -3,7 +3,7 @@
   (:require [clojure.data.json :as json]
             [clojure.java.io :as jio]
             [clojure.tools.logging :as log]
-            [ring.util.io :refer [piped-input-stream]]
+            [documint.pdf.crush :as crush]
             [documint.pdf.signing :as signing]
             [documint.render :refer [render]]
             [documint.util :refer [wait-close]])
@@ -186,3 +186,15 @@
                                             output))
                    "application/pdf")]
     (map #(partial sign-doc %) contents)))
+
+
+(defn crush
+  ""
+  [compression-profile content]
+  (log/info "Preparing document crush"
+            {:compression-profile compression-profile})
+  (fn [output]
+    (log/info "Crushing document pages")
+    (with-open [src-doc (PDDocument/load (:stream content))]
+      (.save (crush/crush-document! src-doc compression-profile) output))
+    "application/pdf"))
