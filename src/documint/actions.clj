@@ -14,7 +14,8 @@
    "thumbnails"  pdf-actions/thumbnails
    "split"       pdf-actions/split
    "metadata"    pdf-actions/metadata
-   "sign"        pdf-actions/sign})
+   "sign"        pdf-actions/sign
+   "crush"       pdf-actions/crush})
 
 
 (defn- realize-response

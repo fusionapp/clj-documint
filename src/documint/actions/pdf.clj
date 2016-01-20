@@ -133,3 +133,24 @@
                (partial allocate-thunks session)
                (fn [contents]
                  {:links {:results contents}})))))
+
+
+(def crush
+  "Compress a PDF document according to a specific compression profile.
+
+  Parameters:
+    `input`: URI to a PDF document to be compressed.
+    `compression-profile`: Compression profile to use, possible choices are
+    \"text\", \"photo-grey\", \"photo\". "
+  (reify IAction
+    (schema [this]
+      {:input               uri?
+       :compression-profile (s/enum "text" "photo-grey" "photo")})
+
+    (perform [this session {:keys [input compression-profile]}]
+      (d/chain (fetch-content input)
+               (partial pdf/crush (keyword compression-profile))
+               vector
+               (partial allocate-thunks session)
+               (fn [content]
+                 {:links {:result content}})))))

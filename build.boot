@@ -21,6 +21,8 @@
                  [org.bouncycastle/bcpkix-jdk15on "1.47"]
                  [org.bouncycastle/bcprov-jdk15on "1.47"]
                  [prismatic/schema "1.0.4"]
+                 [com.twelvemonkeys.imageio/imageio-tiff "3.2.1"]
+                 [com.twelvemonkeys.imageio/imageio-metadata "3.2.1"]
                  ])
 
 
