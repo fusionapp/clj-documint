@@ -7,6 +7,7 @@
            [java.awt.image BufferedImage]
            [javax.imageio
             ImageIO ImageWriteParam IIOImage]
+           [org.apache.pdfbox.cos COSName]
            [org.apache.pdfbox.io RandomAccessBuffer]
            [org.apache.pdfbox.pdmodel.graphics.form PDFormXObject]
            [org.apache.pdfbox.pdmodel.graphics.image
@@ -31,17 +32,24 @@
                clojure.string/lower-case)))
 
 
+(defn- jpeg-stream
+  "Open an `InputStream` for a JPEG `PDImageXObject`."
+  [^PDImageXObject x-img]
+  (.createInputStream (.getStream x-img)
+                      [(.getName COSName/DCT_DECODE)
+                       (.getName COSName/DCT_DECODE_ABBREVIATION)]))
+
+
 (defn- estimate-image-quality
   "Estimate the image quality of a `PDImageXObject`.
 
   Returns a value between 0 and 1."
   [^PDImageXObject x-img]
-  (let [stream (-> x-img
-                   (.. getStream getStream createRawInputStream)
-                   ImageIO/createImageInputStream)]
-    (cond
-      (jpeg? x-img) (JPEGQuality/getJPEGQuality stream)
-      :else         1.0)))
+  (let [dp     (format "dump-%s" (swap! counter inc))]
+    (with-open [stream (jpeg-stream x-img)]
+      (cond
+        (jpeg? x-img) (JPEGQuality/getJPEGQuality (ImageIO/createImageInputStream stream))
+        :else         1.0))))
 
 
 (defn- bilevel-image
