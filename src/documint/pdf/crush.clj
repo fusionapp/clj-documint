@@ -45,11 +45,10 @@
 
   Returns a value between 0 and 1."
   [^PDImageXObject x-img]
-  (let [dp     (format "dump-%s" (swap! counter inc))]
-    (with-open [stream (jpeg-stream x-img)]
-      (cond
-        (jpeg? x-img) (JPEGQuality/getJPEGQuality (ImageIO/createImageInputStream stream))
-        :else         1.0))))
+  (with-open [stream (jpeg-stream x-img)]
+    (cond
+      (jpeg? x-img) (JPEGQuality/getJPEGQuality (ImageIO/createImageInputStream stream))
+      :else         1.0)))
 
 
 (defn- bilevel-image
