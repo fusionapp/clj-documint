@@ -8,9 +8,8 @@
             [documint.web :as web]
             [documint.render.flying-saucer :as saucer]
             [documint.session :refer [temp-file-session-factory]]
-            [documint.actions.pdf :as pdf-actions]
             [documint.config :refer [load-config]]
-            [documint.pdf.signing :as signing]
+            [documint.pdf.signing :refer [signer-component]]
             [documint.util :refer [open-keystore]]))
 
 
@@ -24,7 +23,7 @@
      :session-factory (temp-file-session-factory)
      :renderer        (saucer/renderer (:renderer config {}))
      :signer          (component/using
-                       (signing/signer-component
+                       (signer-component
                         (get-in config [:signing :certificate-passwords] {}))
                        [:keystore])
      :app             (component/using
@@ -32,15 +31,7 @@
                        [:session-factory])
      :web             (component/using
                        (new-web-server (Integer. (env :documint-port)))
-                       {:handler :app})
-     )))
+                       {:handler :app}))))
 
 
-#_(defsystem prod-system
-  [:web (new-web-server (Integer. (env :documint-port))
-                        (make-app))])
-
-#_(defsystem prod-system
-    [:web (new-web-server (Integer. (env :http-port))
-                          (make-app))
-     :repl-server (new-repl-server (Integer. (env :repl-port)))])
+(def prod-system dev-system)
