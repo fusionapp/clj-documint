@@ -236,9 +236,9 @@
   :handle-ok
   (fn [{session ::session
         :as     ctx}]
-    {:links {:self         (session-uri ctx session)
-             :perform      (session-perform-uri ctx session)
-             :post-content (content-index-uri ctx session)}})
+    {:links {:self          (session-uri ctx session)
+             :perform       (session-perform-uri ctx session)
+             :store-content (content-index-uri ctx session)}})
   :delete!
   (fn [{session ::session}]
     (session/destroy session)))
