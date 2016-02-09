@@ -284,7 +284,7 @@
 
 
 (defresource content-index [session-factory]
-  :available-media-types ["*"]
+  :available-media-types ["application/json"]
   :allowed-methods [:post]
   :handle-exception error-response
   :exists? (session? session-factory)
@@ -297,8 +297,7 @@
           content-type (get-in ctx [:request :headers "content-type"]
                                "application/octet-stream")
           content      (session/put-content session content-type body)]
-      {:representation {:media-type "application/json"}
-       ::response      {:links {:self (content-uri ctx content)}}}))
+      {::response {:links {:self (content-uri ctx content)}}}))
   :handle-created ::response)
 
 
