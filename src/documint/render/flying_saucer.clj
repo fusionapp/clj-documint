@@ -8,18 +8,28 @@
            [org.xhtmlrenderer.resource XMLResource]))
 
 
+(defn- find-base-uri
+  "Determine the `href` value of the first `base` tag."
+  [document]
+  (some-> (.getElementsByTagName document "base")
+          (.item 0)
+          (.getAttributes)
+          (.getNamedItem "href")
+          (.getTextContent)))
+
+
 (defrecord FlyingSaucerRenderer [renderer]
   IRenderer
   (render [this input output {:keys [base-uri]
                               :as options}]
     (log/info "Rendering a document with Flying Saucer"
               {:options options})
-    (log/spy
-     (doto renderer
-       (.setDocument
-        (.getDocument (XMLResource/load input)) base-uri)
-       (.layout)
-       (.createPDF output)))))
+    (let [document (.getDocument (XMLResource/load input))]
+      (log/spy
+       (doto renderer
+         (.setDocument document (find-base-uri document))
+         (.layout)
+         (.createPDF output))))))
 
 
 (defn renderer
