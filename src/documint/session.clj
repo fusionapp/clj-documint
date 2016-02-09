@@ -4,6 +4,7 @@
   `ISessionFactory` implements the public API for creation `ISession`s, which in
   turn implement the public API for interacting with sessions."
   (:require [clojure.tools.logging :as log]
+            [manifold.time :refer [in minutes]]
             [documint.content :as content]
             [documint.util :refer [uuid-str]]))
 
@@ -62,7 +63,7 @@
     "Destroy a session."))
 
 
-(defrecord SessionFactory [next-id sessions storage-factory]
+(defrecord SessionFactory [next-id sessions storage-factory ttl]
   ISessionFactory
   (new-session [this]
     (let [id      (next-id)
@@ -70,6 +71,7 @@
                                  :destroy #(swap! sessions dissoc id)
                                  :storage (storage-factory)})]
       (swap! sessions assoc id session)
+      (in ttl #(destroy session))
       session))
 
   (get-session [this id]
@@ -84,6 +86,10 @@
    (temp-file-session-factory (uuid-str)))
 
   ([next-id]
+   (temp-file-session-factory next-id (minutes 10)))
+
+  ([next-id ttl]
    (map->SessionFactory {:next-id         next-id
                          :sessions        (atom {})
-                         :storage-factory #(content/temp-file-storage next-id)})))
+                         :storage-factory #(content/temp-file-storage next-id)
+                         :ttl             ttl})))
