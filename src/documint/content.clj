@@ -116,10 +116,11 @@
 (defrecord TemporaryFileStorage [next-id contents temp-dir]
   IStorage
   (destroy [this]
-    (log/info "Destroying storage"
-              {:temp-dir temp-dir})
-    (delete-temp-dir temp-dir)
-    (reset! contents {}))
+    (when (.exists temp-dir)
+      (log/info "Destroying storage"
+                {:temp-dir temp-dir})
+      (delete-temp-dir temp-dir)
+      (reset! contents {})))
 
   (allocate-entry [this session-id thunk]
     (let [id       (next-id)
