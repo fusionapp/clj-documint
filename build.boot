@@ -58,6 +58,6 @@
   (comp
    (aot :namespace '#{documint.core})
    (pom :project 'myproject
-        :version "1.0.0")
+        :version "0.1.0-SNAPSHOT")
    (uber)
    (jar :main 'documint.core)))
