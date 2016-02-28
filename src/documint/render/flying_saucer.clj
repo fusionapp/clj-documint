@@ -22,12 +22,15 @@
   IRenderer
   (render [this input output {:keys [base-uri]
                               :as options}]
-    (log/info "Rendering a document with Flying Saucer"
-              {:options options})
-    (let [document (.getDocument (XMLResource/load input))]
+    (let [document (.getDocument (XMLResource/load input))
+          base-uri (if (clojure.string/blank? base-uri)
+                     (find-base-uri document)
+                     base-uri)]
+      (log/info "Rendering a document with Flying Saucer"
+                {:base-uri base-uri})
       (log/spy
        (doto renderer
-         (.setDocument document (find-base-uri document))
+         (.setDocument document base-uri)
          (.layout)
          (.createPDF output))))))
 
