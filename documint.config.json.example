@@ -9,6 +9,7 @@
         }
     },
     "renderer": {
-        "font-path": "/path/to/additional/fonts"
+        "font-path": "/path/to/additional/fonts",
+        "logging?": false
     }
 }
