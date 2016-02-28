@@ -12,7 +12,8 @@
   {:keystore {:path     path-exists?
               :password s/Str}
    :signing  {:certificate-passwords {s/Keyword s/Str}}
-   :renderer {(s/optional-key :font-path) path-exists?}})
+   :renderer {(s/optional-key :font-path) path-exists?
+              (s/optional-key :logging?) s/Bool}})
 
 
 (defn- user-home

@@ -5,7 +5,8 @@
   (:require [clojure.tools.logging :as log]
             [documint.render :refer [IRenderer]])
   (:import [org.xhtmlrenderer.pdf ITextRenderer]
-           [org.xhtmlrenderer.resource XMLResource]))
+           [org.xhtmlrenderer.resource XMLResource]
+           [org.xhtmlrenderer.util XRLog]))
 
 
 (defn- find-base-uri
@@ -32,14 +33,27 @@
          (.createPDF output))))))
 
 
+(defn- set-logging
+  "Enabled / disable Flying Saucer logging."
+  [enabled?]
+  (if enabled?
+    (System/setProperty "xr.util-logging.loggingEnabled" "true")
+    (System/clearProperty "xr.util-logging.loggingEnabled"))
+  (XRLog/setLoggingEnabled enabled?))
+
+
 (defn renderer
   "Construct a Flying Saucer `IRenderer` implementation.
 
   Recognised options:
 
   `font-path`: Path string to additional font directories."
-  [{:keys [font-path]
+  [{:keys [font-path
+           logging?]
     :as options}]
+  (log/info "Initialising Flying Saucer renderer"
+            {:options options})
+  (set-logging logging?)
   (let [renderer (ITextRenderer.)]
     (when font-path
       (.addFontDirectory (.getFontResolver renderer) font-path true))
