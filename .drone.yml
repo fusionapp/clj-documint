@@ -22,5 +22,5 @@ notify:
     webhook_url: $$SLACK_URL
     channel: general
     username: drone
-#branches:
-#  - master
+branches:
+  - master
