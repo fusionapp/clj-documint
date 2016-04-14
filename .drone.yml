@@ -6,7 +6,7 @@ build:
     image: idnar/lein
     pull: true
     commands:
-      - /appenv/bin/lein with-profile +drone uberjar
+      - /appenv/usr/local/bin/lein with-profile +drone uberjar
 publish:
   docker:
     registry: scarlet.fusionapp.com:5001
