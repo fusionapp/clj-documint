@@ -1,0 +1,26 @@
+cache:
+  mount:
+    - m2
+build:
+  uberjar:
+    image: idnar/lein
+    pull: true
+    commands:
+      - /usr/local/bin/lein with-profile +drone uberjar
+publish:
+  docker:
+    registry: scarlet.fusionapp.com:5001
+    mirror: https://scarlet.fusionapp.com:5002
+    insecure: false
+    repo: fusionapp/clj-documint
+    file: docker/clj-documint.docker
+    tag: $$BRANCH
+    when:
+      branch: [master]
+notify:
+  slack:
+    webhook_url: $$SLACK_URL
+    channel: general
+    username: drone
+branches:
+  - master

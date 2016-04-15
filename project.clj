@@ -33,4 +33,5 @@
   :profiles {:dev {:source-paths ["dev"]
                    :env {:documint-port 3000}}
              :prod {:env {:documint-port 3000}}
-             :uberjar {:aot :all}})
+             :uberjar {:aot :all}
+             :drone {:local-repo "m2"}})
