@@ -42,7 +42,7 @@
   (if enabled?
     (System/setProperty "xr.util-logging.loggingEnabled" "true")
     (System/clearProperty "xr.util-logging.loggingEnabled"))
-  (XRLog/setLoggingEnabled enabled?))
+  (XRLog/setLoggingEnabled (boolean enabled?)))
 
 
 (defn renderer
