@@ -72,22 +72,8 @@
   (let [page            (.getPage doc page-index)
         dimensions      (.getMediaBox page)
         rotation        (.getRotation page)
-        {:keys [w h
-                nw nh
-                sx sy]} (thumbnail-size dimensions breadth)
-        image           (BufferedImage. nw nh BufferedImage/TYPE_INT_RGB)
-        g               (.createGraphics image)]
-    (doto g
-      (.setBackground Color/WHITE)
-      (.clearRect 0 0 w h)
-      (.scale sx sy))
-    ; If the page is landscape, rotate it back.
-    (when (contains? #{90 270} rotation)
-      (doto g
-        (.rotate (Math/toRadians (- 360 rotation)))
-        (.translate 0 (int (- w)))))
-    (.renderPageToGraphics renderer page-index g)
-    image))
+        {:keys [sx sy]} (thumbnail-size dimensions breadth)]
+    (.renderImage renderer page-index (max sx sy))))
 
 
 (defn thumbnails
