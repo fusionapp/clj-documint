@@ -275,7 +275,7 @@
                             #(transform-response make-uri %)
                             #(assoc {} ::response %))
           ; We deref here because Liberator doesn't really do async.
-          response (deref d 10000 ::no-response)]
+          response (deref d 30000 ::no-response)]
       (if (= ::no-response response)
         (throw (ex-info "Performing an action timed out"
                         {:causes [[:perform-timed-out action]]}))

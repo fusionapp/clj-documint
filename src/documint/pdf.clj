@@ -6,7 +6,7 @@
             [documint.pdf.crush :as crush]
             [documint.pdf.signing :as signing]
             [documint.render :refer [render]]
-            [documint.util :refer [wait-close]])
+            [documint.util :refer [wait-close ppmap]])
   (:import [java.io InputStream]
            [java.awt Color]
            [java.awt.image BufferedImage]
@@ -72,22 +72,8 @@
   (let [page            (.getPage doc page-index)
         dimensions      (.getMediaBox page)
         rotation        (.getRotation page)
-        {:keys [w h
-                nw nh
-                sx sy]} (thumbnail-size dimensions breadth)
-        image           (BufferedImage. nw nh BufferedImage/TYPE_INT_RGB)
-        g               (.createGraphics image)]
-    (doto g
-      (.setBackground Color/WHITE)
-      (.clearRect 0 0 w h)
-      (.scale sx sy))
-    ; If the page is landscape, rotate it back.
-    (when (contains? #{90 270} rotation)
-      (doto g
-        (.rotate (Math/toRadians (- 360 rotation)))
-        (.translate 0 (int (- w)))))
-    (.renderPageToGraphics renderer page-index g)
-    image))
+        {:keys [sx sy]} (thumbnail-size dimensions breadth)]
+    (.renderImage renderer page-index (max sx sy))))
 
 
 (defn thumbnails
@@ -99,8 +85,9 @@
   (log/info "Creating thumbnail images")
   (let [doc         (PDDocument/load (:stream content))
         renderer    (PDFRenderer. doc)
-        images      (map (partial page-thumbnail doc renderer breadth)
-                         (range (.getNumberOfPages doc)))
+        images      (ppmap 4
+                          (partial page-thumbnail doc renderer breadth)
+                          (range (.getNumberOfPages doc)))
         done-one    (wait-close doc images)
         write-image (fn [image output]
                       (ImageIO/write image "jpg" output)

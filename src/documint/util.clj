@@ -17,6 +17,16 @@
      (uuid/to-string (f)))))
 
 
+(defn ppmap
+  "Partitioned pmap, for grouping map ops together to make parallel
+  overhead worthwhile."
+  [grain-size f & colls]
+  (apply concat
+         (apply pmap
+                (fn [& pgroups] (doall (apply map f pgroups)))
+                (map (partial partition-all grain-size) colls))))
+
+
 (defn map-vals
   "Map only the values in a map to produce a new map."
   [f m]
