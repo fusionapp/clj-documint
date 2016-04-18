@@ -6,7 +6,8 @@
             [documint.pdf.crush :as crush]
             [documint.pdf.signing :as signing]
             [documint.render :refer [render]]
-            [documint.util :refer [wait-close ppmap]])
+            [documint.util :refer [wait-close]]
+            [com.climate.claypoole :as cp])
   (:import [java.io InputStream]
            [java.awt Color]
            [java.awt.image BufferedImage]
@@ -85,9 +86,9 @@
   (log/info "Creating thumbnail images")
   (let [doc         (PDDocument/load (:stream content))
         renderer    (PDFRenderer. doc)
-        images      (ppmap 4
-                          (partial page-thumbnail doc renderer breadth)
-                          (range (.getNumberOfPages doc)))
+        images      (cp/pmap :builtin
+                             (partial page-thumbnail doc renderer breadth)
+                             (range (.getNumberOfPages doc)))
         done-one    (wait-close doc images)
         write-image (fn [image output]
                       (ImageIO/write image "jpg" output)

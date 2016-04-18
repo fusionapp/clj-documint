@@ -3,7 +3,8 @@
   (:require [clojure.tools.logging :as log]
             [clj-uuid :as uuid]
             [aleph.http :as http]
-            [manifold.deferred :as d])
+            [manifold.deferred :as d]
+            [com.climate.claypoole :as cp])
   (:import [java.security KeyStore]))
 
 
@@ -15,16 +16,6 @@
   ([f]
    (fn []
      (uuid/to-string (f)))))
-
-
-(defn ppmap
-  "Partitioned pmap, for grouping map ops together to make parallel
-  overhead worthwhile."
-  [grain-size f & colls]
-  (apply concat
-         (apply pmap
-                (fn [& pgroups] (doall (apply map f pgroups)))
-                (map (partial partition-all grain-size) colls))))
 
 
 (defn map-vals
@@ -73,7 +64,7 @@
    (fn [v]
      (cond
        (map? v)        (transform-map f v)
-       (sequential? v) (mapv f v)
+       (sequential? v) (cp/pmap :builtin f v)
        :else           (f v)))
    m))
 
