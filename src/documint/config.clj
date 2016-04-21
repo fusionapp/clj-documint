@@ -4,6 +4,7 @@
             [clojure.java.io :as jio]
             [clojure.tools.logging :as log]
             [schema.core :as s]
+            [environ.core :refer [env]]
             [documint.schema :refer [path-exists?]]
             [documint.util :refer [deep-merge]]))
 
@@ -53,10 +54,12 @@
           (jio/file (run-dir) "documint.config.json")))
 
 
-(defn validate-config
-  "Validate the configuration data."
+(defn- merge-env
+  "Merge environment variables into the config."
   [config]
-  (s/validate config-schema config))
+  (merge config
+         {:web-server {:port     (Integer. (env :documint-port))
+                       :ssl-port (Integer. (env :documint-ssl-port))}}))
 
 
 (defn load-config
@@ -70,4 +73,5 @@
         (reduce (fn [config f]
                   (deep-merge config (parse-config f)))
                 default-config)
-        validate-config)))
+        merge-env
+        (s/validate config-schema))))

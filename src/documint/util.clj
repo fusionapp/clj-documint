@@ -82,3 +82,9 @@
           (throw (ex-info "Invalid keystore"
                           {:causes [[:invalid-keystore (.getMessage e)]]}))))
       keystore)))
+
+
+(defn deep-merge
+  "Deeply merge maps."
+  [& maps]
+  (apply merge-with deep-merge maps))
