@@ -4,7 +4,8 @@
             [clojure.java.io :as jio]
             [clojure.tools.logging :as log]
             [schema.core :as s]
-            [documint.schema :refer [path-exists?]]))
+            [documint.schema :refer [path-exists?]]
+            [documint.util :refer [deep-merge]]))
 
 
 (def ^:private config-schema
@@ -67,6 +68,6 @@
    (log/info "Loading configuration")
    (->> known-paths
         (reduce (fn [config f]
-                  (merge config (parse-config f)))
+                  (deep-merge config (parse-config f)))
                 default-config)
         validate-config)))
