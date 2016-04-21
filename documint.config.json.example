@@ -1,4 +1,9 @@
 {
+    "web-server": {
+        "port": 3000,
+        "ssl-port": 3001,
+        "ssl-cert": "sslcert"
+    },
     "keystore": {
         "path": "/path/to/keystore",
         "password": "keystore password"
