@@ -343,7 +343,7 @@
 (defn- configure-ssl-connector
   "Configure the SSL context factory.
 
-  Primarily we want to set the SSL certificate alias and remove an HTTP
+  Primarily we want to set the SSL certificate alias and remove any HTTP
   connectors."
   [ssl-cert-alias server]
   (doseq [connector (.getConnectors server)]
