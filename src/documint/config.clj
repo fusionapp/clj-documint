@@ -57,9 +57,11 @@
 (defn- merge-env
   "Merge environment variables into the config."
   [config]
-  (merge config
-         {:web-server {:port     (Integer. (env :documint-port))
-                       :ssl-port (Integer. (env :documint-ssl-port))}}))
+  (let [{port     :documint-port
+         ssl-port :documint-ssl-port} env]
+    (cond-> config
+      port     (assoc-in [:web-server :port] (Integer. port))
+      ssl-port (assoc-in [:web-server :ssl-port] (Integer. ssl-port)))))
 
 
 (defn load-config
