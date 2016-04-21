@@ -48,7 +48,8 @@
             [documint.content :as content]
             [documint.session :as session]
             [documint.actions :refer [perform-action]]
-            [documint.util :refer [transform-map]]))
+            [documint.util :refer [transform-map]])
+  (:import [org.eclipse.jetty.server SslConnectionFactory]))
 
 
 (def routes
@@ -337,3 +338,35 @@
 (defn new-app
   []
   (map->App {}))
+
+
+(defn- configure-ssl-connector
+  "Configure the SSL context factory.
+
+  Primarily we want to set the SSL certificate alias and remove an HTTP
+  connectors."
+  [ssl-cert-alias server]
+  (doseq [connector (.getConnectors server)]
+    (if-let [ssl-context-factory
+             (some-> connector
+                     (.getConnectionFactory SslConnectionFactory)
+                     .getSslContextFactory)]
+      (.setCertAlias ssl-context-factory ssl-cert-alias)
+      ; We need this since the `http?` ring-jetty-adapter option is not in a
+      ; release yet.
+      (.removeConnector server connector))))
+
+
+(defn jetty-options
+  "ring-jetty-adapter options."
+  [keystore
+   {{:keys [port
+            ssl-port
+            ssl-cert]} :web-server
+    {:keys [password]} :keystore}]
+  {:configurator (when ssl-port
+                   (partial configure-ssl-connector ssl-cert))
+   :port         port
+   :ssl-port     ssl-port
+   :keystore     keystore
+   :key-password password})

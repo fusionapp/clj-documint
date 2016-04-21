@@ -4,7 +4,6 @@
             [system.core :refer [defsystem]]
             (system.components
              [jetty :refer [new-web-server]])
-            [environ.core :refer [env]]
             [documint.web :as web]
             [documint.render.flying-saucer :as saucer]
             [documint.session :refer [temp-file-session-factory]]
@@ -14,12 +13,12 @@
 
 
 (defn dev-system
-  ""
   []
-  (let [config (load-config)]
+  (let [config (load-config)
+        keystore (open-keystore (get-in config [:keystore :path])
+                                (get-in config [:keystore :password]))]
     (component/system-map
-     :keystore        (open-keystore (get-in config [:keystore :path])
-                                     (get-in config [:keystore :password]))
+     :keystore        keystore
      :session-factory (temp-file-session-factory)
      :renderer        (saucer/renderer (:renderer config {}))
      :signer          (component/using
@@ -29,9 +28,11 @@
      :app             (component/using
                        (web/new-app)
                        [:session-factory])
+     :web-options     (web/jetty-options keystore config)
      :web             (component/using
-                       (new-web-server (Integer. (env :documint-port)))
-                       {:handler :app}))))
+                       (new-web-server 0)
+                       {:handler :app
+                        :options :web-options}))))
 
 
 (def prod-system dev-system)
