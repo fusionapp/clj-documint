@@ -1,4 +1,9 @@
 {
+    "web-server": {
+        "port": 3000,
+        "tls-port": 3001,
+        "tls-cert": "tlscert"
+    },
     "keystore": {
         "path": "/path/to/keystore",
         "password": "keystore password"

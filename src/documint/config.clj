@@ -4,16 +4,21 @@
             [clojure.java.io :as jio]
             [clojure.tools.logging :as log]
             [schema.core :as s]
-            [documint.schema :refer [path-exists?]]))
+            [environ.core :refer [env]]
+            [documint.schema :refer [path-exists?]]
+            [documint.util :refer [deep-merge]]))
 
 
 (def ^:private config-schema
   ""
-  {:keystore {:path     path-exists?
-              :password s/Str}
-   :signing  {:certificate-passwords {s/Keyword s/Str}}
-   :renderer {(s/optional-key :font-path) path-exists?
-              (s/optional-key :logging?) s/Bool}})
+  {:web-server {(s/optional-key :port)     s/Int
+                (s/optional-key :tls-port) s/Int
+                (s/optional-key :tls-cert) s/Str}
+   :keystore   {:path     path-exists?
+                :password s/Str}
+   :signing    {:certificate-passwords {s/Keyword s/Str}}
+   :renderer   {(s/optional-key :font-path) path-exists?
+                (s/optional-key :logging?)  s/Bool}})
 
 
 (defn- user-home
@@ -49,10 +54,14 @@
           (jio/file (run-dir) "documint.config.json")))
 
 
-(defn validate-config
-  "Validate the configuration data."
+(defn- merge-env
+  "Merge environment variables into the config."
   [config]
-  (s/validate config-schema config))
+  (let [{port     :documint-port
+         tls-port :documint-tls-port} env]
+    (cond-> config
+      port     (assoc-in [:web-server :port] (Integer. port))
+      tls-port (assoc-in [:web-server :tls-port] (Integer. tls-port)))))
 
 
 (defn load-config
@@ -64,6 +73,7 @@
    (log/info "Loading configuration")
    (->> known-paths
         (reduce (fn [config f]
-                  (merge config (parse-config f)))
+                  (deep-merge config (parse-config f)))
                 default-config)
-        validate-config)))
+        merge-env
+        (s/validate config-schema))))
