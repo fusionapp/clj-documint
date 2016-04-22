@@ -14,21 +14,25 @@
 
 (defn dev-system
   []
-  (let [config (load-config)
-        keystore (open-keystore (get-in config [:keystore :path])
-                                (get-in config [:keystore :password]))]
+  (let [config          (load-config)
+        conf            (partial get-in config)
+        keystore        (open-keystore (conf [:keystore :path])
+                                       (conf [:keystore :password]))
+        truststore      (when (conf [:truststore])
+                          (open-keystore (conf [:truststore :password])
+                                         (conf [:truststore :path])))]
     (component/system-map
      :keystore        keystore
+     :truststore      truststore
      :session-factory (temp-file-session-factory)
-     :renderer        (saucer/renderer (:renderer config {}))
+     :renderer        (saucer/renderer (conf [:renderer] {}))
      :signer          (component/using
-                       (signer-component
-                        (get-in config [:signing :certificate-passwords] {}))
+                       (signer-component (conf [:signing :certificate-passwords] {}))
                        [:keystore])
      :app             (component/using
                        (web/new-app)
                        [:session-factory])
-     :web-options     (web/jetty-options keystore config)
+     :web-options     (web/jetty-options keystore truststore config)
      :web             (component/using
                        (new-web-server 0)
                        {:handler :app

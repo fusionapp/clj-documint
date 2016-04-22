@@ -360,13 +360,18 @@
 (defn jetty-options
   "ring-jetty-adapter options."
   [keystore
-   {{:keys [port
-            tls-port
-            tls-cert]} :web-server
-    {:keys [password]} :keystore}]
-  {:configurator (when tls-port
-                   (partial configure-ssl-connector tls-cert))
-   :port         port
-   :ssl-port     tls-port
-   :keystore     keystore
-   :key-password password})
+   truststore
+   {{:keys [port tls-port tls-cert]} :web-server
+    {key-password :password}         :keystore
+    {trust-password :password}       :truststore}]
+  (merge
+   {:configurator   (when tls-port
+                      (partial configure-ssl-connector tls-cert))
+    :port           port
+    :ssl-port       tls-port
+    :keystore       keystore
+    :key-password   key-password}
+   (when truststore
+     {:client-auth    :need
+      :truststore     truststore
+      :trust-password trust-password})))
