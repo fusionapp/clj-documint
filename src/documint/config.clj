@@ -12,8 +12,8 @@
 (def ^:private config-schema
   ""
   {:web-server {(s/optional-key :port)     s/Int
-                (s/optional-key :ssl-port) s/Int
-                (s/optional-key :ssl-cert) s/Str}
+                (s/optional-key :tls-port) s/Int
+                (s/optional-key :tls-cert) s/Str}
    :keystore   {:path     path-exists?
                 :password s/Str}
    :signing    {:certificate-passwords {s/Keyword s/Str}}
@@ -58,10 +58,10 @@
   "Merge environment variables into the config."
   [config]
   (let [{port     :documint-port
-         ssl-port :documint-ssl-port} env]
+         tls-port :documint-tls-port} env]
     (cond-> config
       port     (assoc-in [:web-server :port] (Integer. port))
-      ssl-port (assoc-in [:web-server :ssl-port] (Integer. ssl-port)))))
+      tls-port (assoc-in [:web-server :tls-port] (Integer. tls-port)))))
 
 
 (defn load-config
