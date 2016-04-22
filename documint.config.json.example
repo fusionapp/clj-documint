@@ -8,6 +8,10 @@
         "path": "/path/to/keystore",
         "password": "keystore password"
     },
+    "truststore": {
+        "path": "/path/to/truststore",
+        "password": "truststore password"
+    },
     "signing": {
         "certificate-passwords": {
             "selfsigned": "certificate password"
