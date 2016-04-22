@@ -19,8 +19,8 @@
         keystore        (open-keystore (conf [:keystore :path])
                                        (conf [:keystore :password]))
         truststore      (when (conf [:truststore])
-                          (open-keystore (conf [:truststore :password])
-                                         (conf [:truststore :path])))]
+                          (open-keystore (conf [:truststore :path])
+                                         (conf [:truststore :password])))]
     (component/system-map
      :keystore        keystore
      :truststore      truststore
