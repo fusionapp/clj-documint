@@ -345,7 +345,7 @@
 
   Primarily we want to set the certificate alias and remove any HTTP
   connectors."
-  [cert-alias server]
+  [cert-alias http? server]
   (doseq [connector (.getConnectors server)]
     (if-let [ssl-context-factory
              (some-> connector
@@ -354,7 +354,8 @@
       (.setCertAlias ssl-context-factory cert-alias)
       ; We need this since the `http?` ring-jetty-adapter option is not in a
       ; release yet.
-      (.removeConnector server connector))))
+      (when-not http?
+        (.removeConnector server connector)))))
 
 
 (defn jetty-options
@@ -364,14 +365,14 @@
    {{:keys [port tls-port tls-cert]} :web-server
     {key-password :password}         :keystore
     {trust-password :password}       :truststore}]
-  (merge
-   {:configurator   (when tls-port
-                      (partial configure-ssl-connector tls-cert))
-    :port           port
-    :ssl-port       tls-port
-    :keystore       keystore
-    :key-password   key-password}
-   (when truststore
-     {:client-auth    :need
-      :truststore     truststore
-      :trust-password trust-password})))
+  (let [http? (boolean port)
+        tls?  (boolean tls-port)]
+    (cond-> {:ssl? tls?}
+      http?      (conj {:port port})
+      tls?       (conj {:configurator (partial configure-ssl-connector tls-cert http?)
+                        :ssl-port     tls-port})
+      keystore   (conj {:keystore     keystore
+                        :key-password key-password})
+      truststore (conj {:client-auth    :need
+                        :truststore     truststore
+                        :trust-password trust-password}))))
