@@ -39,7 +39,6 @@
   "Run a restartable system in the Repl"
   []
   (comp
-   (environ :env {:documint-port 3000})
    (watch :verbose true)
    (system :sys #'dev-system :auto-start true :hot-reload true)
    (repl :server true)))
@@ -49,7 +48,6 @@
   "Run a dev system from the command line"
   []
   (comp
-   (environ :env {:documint-port 3000})
    (run :main-namespace "documint.core" :arguments [#'dev-system])
    (wait)))
 

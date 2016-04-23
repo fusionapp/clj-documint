@@ -32,8 +32,6 @@
   :jvm-opts ["-Djava.awt.headless=true"]
   :main ^:skip-aot documint.core
   :target-path "target/%s"
-  :profiles {:dev {:source-paths ["dev"]
-                   :env {:documint-port 3000}}
-             :prod {:env {:documint-port 3000}}
+  :profiles {:dev {:source-paths ["dev"]}
              :uberjar {:aot :all}
              :drone {:local-repo "m2"}})
