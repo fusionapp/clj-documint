@@ -84,17 +84,17 @@
   be scaled accordingly."
   [breadth content]
   (log/info "Creating thumbnail images")
-  (let [doc         (PDDocument/load (:stream content))
-        renderer    (PDFRenderer. doc)
-        images      (cp/pmap :builtin
-                             (partial page-thumbnail doc renderer breadth)
-                             (range (.getNumberOfPages doc)))
-        done-one    (wait-close doc images)
-        write-image (fn [image output]
-                      (ImageIO/write image "jpg" output)
-                      (done-one image)
-                      "image/jpeg")]
-    (map #(partial write-image %) images)))
+  (let [doc          (PDDocument/load (:stream content))
+        renderer     (PDFRenderer. doc)
+        pages        (range (.getNumberOfPages doc))
+        done-one     (wait-close doc pages)
+        write-thumb  (fn [page-index output]
+                       (ImageIO/write (page-thumbnail doc renderer breadth page-index)
+                                      "jpg"
+                                      output)
+                       (done-one page-index)
+                       "image/jpeg")]
+    (map #(partial write-thumb %) pages)))
 
 
 (defn- page-extractor
