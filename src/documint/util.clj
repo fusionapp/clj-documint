@@ -88,3 +88,16 @@
   "Deeply merge maps."
   [& maps]
   (apply merge-with deep-merge maps))
+
+
+(defmacro time-body-ms
+  "Time the specified expression and return a vector containing execution time
+  (in milliseconds) and the expression result."
+  [expr]
+  (let [sym (= (type expr) clojure.lang.Symbol)]
+    `(let [start#  (. System (nanoTime))
+           return# ~expr
+           res#    (if ~sym
+                     (resolve '~expr)
+                     (resolve (first '~expr)))]
+       [(/ (double (- (. System (nanoTime)) start#)) 1000000.0) return#])))
