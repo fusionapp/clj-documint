@@ -2,10 +2,11 @@
   "Documint actions."
   (:require [manifold.deferred :as d]
             [schema.core :as s]
+            [com.climate.claypoole :as cp]
             [documint.actions.interfaces :refer [perform schema]]
             [documint.actions.pdf :as pdf-actions]
             [documint.content :as content]
-            [documint.util :refer [transform-map]]))
+            [documint.util :refer [ptransform-map]]))
 
 
 (def ^:private known-actions
@@ -24,9 +25,10 @@
   Any `IStorageEntry` values will be realized via
   `documint.content/realize-thunk`. Returns a map with the same structure as the
   original response."
-  [response]
+  [pool response]
   (future
-    (transform-map
+    (ptransform-map
+     pool
      (fn [x]
        (if (satisfies? content/IStorageEntry x)
          (content/realize-thunk x)
@@ -35,13 +37,18 @@
   response)
 
 
+; XXX: This is not ideal, we should be sharing the threadpool with the rest of
+; the application.
+(def ^:private pool (cp/threadpool (cp/ncpus)))
+
+
 (defn perform-action
   "Perform an `IAction` by name."
   [action-name parameters session]
   (if-let [action (get known-actions action-name)]
     (try
       (d/chain (perform action session (s/validate (schema action) parameters))
-               realize-response)
+               (partial realize-response pool))
       (catch clojure.lang.ExceptionInfo e
         (let [data (ex-data e)]
           (throw
