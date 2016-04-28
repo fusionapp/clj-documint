@@ -367,7 +367,8 @@
     {trust-password :password}       :truststore}]
   (let [http? (boolean port)
         tls?  (boolean tls-port)]
-    (cond-> {:ssl? tls?}
+    (cond-> {:join? false
+             :ssl?  tls?}
       http?      (conj {:port port})
       tls?       (conj {:configurator (partial configure-ssl-connector tls-cert http?)
                         :ssl-port     tls-port})
