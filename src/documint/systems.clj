@@ -14,13 +14,13 @@
 
 (defn dev-system
   []
-  (let [config          (load-config)
-        conf            (partial get-in config)
-        keystore        (open-keystore (conf [:keystore :path])
-                                       (conf [:keystore :password]))
-        truststore      (when (conf [:truststore])
-                          (open-keystore (conf [:truststore :path])
-                                         (conf [:truststore :password])))]
+  (let [config     (load-config)
+        conf       (partial get-in config)
+        keystore   (open-keystore (conf [:keystore :path])
+                                  (conf [:keystore :password]))
+        truststore (when (conf [:truststore])
+                     (open-keystore (conf [:truststore :path])
+                                    (conf [:truststore :password])))]
     (component/system-map
      :keystore        keystore
      :truststore      truststore
