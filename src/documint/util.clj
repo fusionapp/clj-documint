@@ -56,17 +56,25 @@
     done))
 
 
+(defn ptransform-map
+  "Recursively transform every primitive value in map `m` by passing it to `f`,
+  while retaining the structure of `m`. Sequential values are transformed in
+  parallel."
+  [pool f m]
+  (map-vals
+   (fn [v]
+     (cond
+       (map? v)        (ptransform-map pool f v)
+       (sequential? v) (cp/pmap pool f v)
+       :else           (f v)))
+   m))
+
+
 (defn transform-map
   "Recursively transform every primitive value in map `m` by passing it to `f`,
   while retaining the structure of `m`."
   [f m]
-  (map-vals
-   (fn [v]
-     (cond
-       (map? v)        (transform-map f v)
-       (sequential? v) (cp/pmap :builtin f v)
-       :else           (f v)))
-   m))
+  (ptransform-map :serial f m))
 
 
 (defn open-keystore
