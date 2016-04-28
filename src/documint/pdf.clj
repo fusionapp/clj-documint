@@ -6,14 +6,14 @@
             [documint.pdf.crush :as crush]
             [documint.pdf.signing :as signing]
             [documint.render :refer [render]]
-            [documint.util :refer [wait-close]]
+            [documint.util :refer [wait-close time-body-ms]]
             [com.climate.claypoole :as cp])
   (:import [java.io InputStream]
            [java.awt Color]
            [java.awt.image BufferedImage]
            [javax.imageio ImageIO]
            [org.apache.pdfbox.pdmodel PDDocument]
-           [org.apache.pdfbox.rendering PDFRenderer]
+           [org.apache.pdfbox.rendering PDFRenderer ImageType]
            [org.apache.pdfbox.multipdf PDFMergerUtility]))
 
 
@@ -70,11 +70,19 @@
   (log/info "Creating a single thumbnail image"
             {:breadth    breadth
              :page-index page-index})
-  (let [page            (.getPage doc page-index)
-        dimensions      (.getMediaBox page)
-        rotation        (.getRotation page)
-        {:keys [sx sy]} (thumbnail-size dimensions breadth)]
-    (.renderImage renderer page-index (max sx sy))))
+  (let [[ms image]
+        (time-body-ms
+         (let [page            (.getPage doc page-index)
+               dimensions      (.getMediaBox page)
+               {:keys [sx sy]} (thumbnail-size dimensions breadth)]
+           (.renderImage renderer
+                         page-index
+                         (min 1 (max sx sy))
+                         ImageType/RGB)))]
+    (log/info "Done rendering thumbnail"
+              {:page-index page-index
+               :ms         ms})
+    image))
 
 
 (defn thumbnails
@@ -84,17 +92,17 @@
   be scaled accordingly."
   [breadth content]
   (log/info "Creating thumbnail images")
-  (let [doc         (PDDocument/load (:stream content))
-        renderer    (PDFRenderer. doc)
-        images      (cp/pmap :builtin
-                             (partial page-thumbnail doc renderer breadth)
-                             (range (.getNumberOfPages doc)))
-        done-one    (wait-close doc images)
-        write-image (fn [image output]
-                      (ImageIO/write image "jpg" output)
-                      (done-one image)
-                      "image/jpeg")]
-    (map #(partial write-image %) images)))
+  (let [doc          (PDDocument/load (:stream content))
+        renderer     (PDFRenderer. doc)
+        pages        (range (.getNumberOfPages doc))
+        done-one     (wait-close doc pages)
+        write-thumb  (fn [page-index output]
+                       (ImageIO/write (page-thumbnail doc renderer breadth page-index)
+                                      "jpg"
+                                      output)
+                       (done-one page-index)
+                       "image/jpeg")]
+    (map #(partial write-thumb %) pages)))
 
 
 (defn- page-extractor
