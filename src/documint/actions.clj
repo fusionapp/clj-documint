@@ -26,7 +26,7 @@
   `documint.content/realize-thunk`. Returns a map with the same structure as the
   original response."
   [pool response]
-  (future
+  (d/future
     (ptransform-map
      pool
      (fn [x]
