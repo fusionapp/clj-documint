@@ -61,8 +61,8 @@
 (defn- merge-env
   "Merge environment variables into the config."
   [config]
-  (let [{^long port     :documint-port
-         ^long tls-port :documint-tls-port} env]
+  (let [{port     :documint-port
+         tls-port :documint-tls-port} env]
     (cond-> config
       port     (assoc-in [:web-server :port] (Integer. port))
       tls-port (assoc-in [:web-server :tls-port] (Integer. tls-port)))))
