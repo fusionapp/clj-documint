@@ -70,9 +70,8 @@
 (defn thumbnails
   "Create thumbnail images for each page in `content`.
 
-  `breadth` is the widest part of the thumbnail in pixels, the shorter end will
-  be scaled accordingly."
-  [breadth content]
+  `dpi` is pixel density of the resulting thumbnail."
+  [dpi content]
   (log/info "Creating thumbnail images")
   (let [baos        (java.io.ByteArrayOutputStream.)
         _           (-> content
@@ -82,7 +81,10 @@
         pages       (range (.getNumberOfPages doc))
         done-one    (wait-close doc pages)
         write-thumb (fn [page-index output]
-                      (page-thumbnail (.toByteArray baos) page-index 100 output)
+                      (page-thumbnail (.toByteArray baos)
+                                      page-index
+                                      dpi
+                                      output)
                       (done-one page-index)
                       "image/jpeg")]
     (map #(partial write-thumb %) pages)))
