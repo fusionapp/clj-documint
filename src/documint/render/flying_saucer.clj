@@ -4,14 +4,16 @@
   See <https://github.com/flyingsaucerproject/flyingsaucer>."
   (:require [clojure.tools.logging :as log]
             [documint.render :refer [IRenderer]])
-  (:import [org.xhtmlrenderer.pdf ITextRenderer]
+  (:import [java.io InputStream OutputStream]
+           [org.w3c.dom Document]
+           [org.xhtmlrenderer.pdf ITextRenderer]
            [org.xhtmlrenderer.resource XMLResource]
            [org.xhtmlrenderer.util XRLog]))
 
 
 (defn- find-base-uri
   "Determine the `href` value of the first `base` tag."
-  [document]
+  [^Document document]
   (some-> (.getElementsByTagName document "base")
           (.item 0)
           (.getAttributes)
@@ -19,14 +21,15 @@
           (.getTextContent)))
 
 
-(defrecord FlyingSaucerRenderer [renderer]
+(defrecord FlyingSaucerRenderer [^ITextRenderer renderer]
   IRenderer
-  (render [this input output {:keys [base-uri]
-                              :as options}]
-    (let [document (.getDocument (XMLResource/load input))
-          base-uri (if (clojure.string/blank? base-uri)
-                     (find-base-uri document)
-                     base-uri)]
+  (render [this input output
+           {:keys [base-uri] :as options}]
+    (let [^InputStream input input
+          document           (.getDocument (XMLResource/load input))
+          base-uri           (if (clojure.string/blank? base-uri)
+                               (find-base-uri document)
+                               base-uri)]
       (log/info "Rendering a document with Flying Saucer"
                 {:base-uri base-uri})
       (log/spy

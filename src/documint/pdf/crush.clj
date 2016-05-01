@@ -3,19 +3,22 @@
   (:require [clojure.tools.logging :as log]
             [ring.util.io :refer [piped-input-stream]]
             [documint.pdf.core :refer [page-images x-object-length]])
-  (:import [java.awt RenderingHints]
+  (:import [java.io InputStream]
+           [java.awt RenderingHints Graphics2D]
            [java.awt.image BufferedImage]
            [javax.imageio
-            ImageIO ImageWriteParam IIOImage]
+            ImageIO ImageWriter ImageWriteParam IIOImage]
+           [javax.imageio.plugins.jpeg JPEGImageWriteParam]
            [org.apache.pdfbox.cos COSName]
            [org.apache.pdfbox.io RandomAccessBuffer]
+           [org.apache.pdfbox.pdmodel PDDocument PDResources]
            [org.apache.pdfbox.pdmodel.graphics.form PDFormXObject]
            [org.apache.pdfbox.pdmodel.graphics.image
             PDImageXObject JPEGFactory CCITTFactory]
            [com.twelvemonkeys.imageio.metadata.jpeg JPEGQuality]))
 
 
-(defn- writer-for-format
+(defn- ^ImageWriter writer-for-format
   "Obtain the first `ImageWriter` for a given format name."
   [format-name]
   (-> format-name
@@ -32,7 +35,7 @@
                clojure.string/lower-case)))
 
 
-(defn- jpeg-stream
+(defn- ^InputStream jpeg-stream
   "Open an `InputStream` for a JPEG `PDImageXObject`."
   [^PDImageXObject x-img]
   (.createInputStream (.getStream x-img)
@@ -91,7 +94,7 @@
             sw  (int (/ w xf))
             sh  (int (/ h yf))
             dst (BufferedImage. sw sh (.getType src))]
-        (doto (.getGraphics dst)
+        (doto ^Graphics2D (.getGraphics dst)
           (.setRenderingHint RenderingHints/KEY_INTERPOLATION
                              RenderingHints/VALUE_INTERPOLATION_BILINEAR)
           (.drawImage src 0 0 sw sh 0 0 w h nil)
@@ -115,10 +118,10 @@
     "Compress an image."))
 
 
-(defn write-image
+(defn ^InputStream write-image
   "Produce an `InputStream` containing `BufferedImage` image data written using
   an `ImageWriter`."
-  [writer write-param img]
+  [^ImageWriter writer ^ImageWriteParam write-param ^BufferedImage img]
   (piped-input-stream
    (fn [output]
      (doto writer
@@ -129,7 +132,7 @@
 (defrecord CCITTCompressor [writer write-param dpi]
   IImageCompressor
   (transform-image [this object-info x-img]
-    (-> (.getImage x-img)
+    (-> (.getImage ^PDImageXObject x-img)
         (downsample-image (:dpi object-info) dpi)
         bilevel-image))
 
@@ -170,7 +173,7 @@
 (defrecord JPEGCompressor [writer write-param dpi bpp quality]
   IImageCompressor
   (transform-image [this object-info x-img]
-    (-> (.getImage x-img)
+    (-> (.getImage ^PDImageXObject x-img)
         (downsample-image (:dpi object-info) dpi)
         (cond->
             (= bpp 8) greyscale-image)))
@@ -200,10 +203,10 @@
   "Create an `IImageCompressor` instance that uses JPEG compression, at `bpp`
   bits-per-pixel and `quality` (a value between 0 and 1) compression quality."
   [{:keys [bpp quality dpi]}]
-  (let [writer      (writer-for-format "jpeg")]
+  (let [writer (writer-for-format "jpeg")]
     (map->JPEGCompressor
      {:writer      writer
-      :write-param (doto (.getDefaultWriteParam writer)
+      :write-param (doto ^JPEGImageWriteParam (.getDefaultWriteParam writer)
                      (.setOptimizeHuffmanTables true)
                      (.setCompressionMode ImageWriteParam/MODE_EXPLICIT)
                      (.setCompressionQuality quality))
@@ -241,7 +244,7 @@
      :x-objects x-objects}))
 
 
-(defn- compress-image
+(defn- ^PDImageXObject compress-image
   "Compress a single `PDImageXObject` in a lossy fashion."
   [document compressor object-info x-img]
   (let [new-img (compress compressor document object-info x-img)
@@ -259,21 +262,25 @@
   compressed images; unless the compressed image is bigger than the original in
   which case no action is taken."
   [document compressor page]
-  (for [{:keys [name x-object info container]} (:x-objects page)
+  (for [{:keys [^COSName name
+                x-object
+                info
+                ^PDResources container]} (:x-objects page)
         :let [shrunk 0]]
-    (if-let [[shrunk x-img] (compress-image document compressor info x-object)]
+    (if-let [[shrunk ^PDImageXObject x-img]
+             (compress-image document compressor info x-object)]
       (do (.put container name x-img)
           shrunk)
       shrunk)))
 
 
-(defn crush-document!
+(defn ^PDDocument crush-document!
   "Compress a document, in a lossy fashion, according to a compression profile.
 
   Pages in the document are mutated, see `compress-page!` for more information.
 
   See `compression-profiles` for valid profiles."
-  [document compression-profile]
+  [^PDDocument document compression-profile]
   (let [compressor ((compression-profiles compression-profile))
         pages      (map page->map (.getPages document))
         shrunk     (transduce cat +

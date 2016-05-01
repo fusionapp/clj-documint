@@ -5,7 +5,8 @@
   (:require [clojure.java.io :as jio]
             [clojure.tools.logging :as log]
             [ring.util.io :refer [piped-input-stream]]
-            [manifold.deferred :as d]))
+            [manifold.deferred :as d])
+  (:import [java.io File]))
 
 
 (defn- tmpdir
@@ -15,9 +16,9 @@
   (System/getProperty "java.io.tmpdir"))
 
 
-(defn- create-temp-dir
+(defn- ^File create-temp-dir
   "Create a temporary directory."
-  [parent prefix]
+  [^File parent prefix]
   (.toFile (java.nio.file.Files/createTempDirectory
             (if (instance? java.io.File parent)
               (.toPath parent)
@@ -26,7 +27,7 @@
             (into-array java.nio.file.attribute.FileAttribute []))))
 
 
-(defn- create-temp-file
+(defn- ^File create-temp-file
   "Create a file for the temporary storage of content data."
   [parent content-id]
   (java.io.File/createTempFile content-id nil parent))
@@ -34,7 +35,7 @@
 
 (defn- delete-temp-dir
   "Delete the content temporary storage."
-  [root]
+  [^File root]
   (doseq [path (.listFiles root)]
     (jio/delete-file path))
   (jio/delete-file root))
@@ -113,7 +114,7 @@
     "Allocate and realize a content entry."))
 
 
-(defrecord TemporaryFileStorage [next-id contents temp-dir]
+(defrecord TemporaryFileStorage [next-id contents ^File temp-dir]
   IStorage
   (destroy [this]
     (when (.exists temp-dir)

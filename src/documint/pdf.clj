@@ -9,9 +9,16 @@
             [documint.render :refer [render]]
             [documint.util :refer [wait-close time-body-ms]]
             [com.climate.claypoole :as cp])
-  (:import [java.io InputStream]
-           [org.apache.pdfbox.pdmodel PDDocument]
+  (:import [java.io InputStream OutputStream]
+           [org.apache.pdfbox.pdmodel PDDocument PDPage]
            [org.apache.pdfbox.multipdf PDFMergerUtility]))
+
+
+(defn- ^PDDocument content->doc
+  ""
+  [content]
+  (let [^InputStream stream (:stream content)]
+    (PDDocument/load stream)))
 
 
 (defn render-html
@@ -19,7 +26,7 @@
   [renderer options content]
   (log/info "Rendering a document"
             {:options options})
-  (fn [output]
+  (fn [^OutputStream output]
     (log/spy
      (render renderer (:stream content) output options))
     "application/pdf"))
@@ -36,7 +43,7 @@
         merger  (PDFMergerUtility.)]
     (doseq [^InputStream s streams]
       (.addSource merger s))
-    (fn [output]
+    (fn [^OutputStream output]
       (doto merger
         (.setDestinationStream output)
         (.mergeDocuments nil))
@@ -81,7 +88,7 @@
         doc         (PDDocument/load (.toByteArray baos))
         pages       (range (.getNumberOfPages doc))
         done-one    (wait-close doc pages)
-        write-thumb (fn [page-index output]
+        write-thumb (fn [page-index ^OutputStream output]
                       (page-thumbnail (.toByteArray baos)
                                       page-index
                                       dpi
@@ -98,7 +105,7 @@
   `page-indices` is a vector of page numbers, only those pages from the original
   document will be contained in the resulting document, in the order they are
   specified."
-  [src-doc page-indices]
+  [^PDDocument src-doc page-indices]
   (let [dst-doc (PDDocument.)]
     (doto dst-doc
       (.setDocumentInformation (.getDocumentInformation src-doc))
@@ -108,8 +115,8 @@
                getDocumentCatalog
                getViewerPreferences))))
     (doseq [page-index page-indices]
-      (let [page     (.getPage src-doc (dec page-index))
-            imported (.importPage dst-doc page)]
+      (let [^PDPage page (.getPage src-doc (dec page-index))
+            imported     (.importPage dst-doc page)]
         (doto imported
           (.setCropBox (.getCropBox page))
           (.setMediaBox (.getMediaBox page))
@@ -127,10 +134,10 @@
   [page-groups content]
   (log/info "Splitting document"
             {:page-groups page-groups})
-  (let [src-doc   (PDDocument/load (:stream content))
+  (let [src-doc   (content->doc content)
         docs      (map (partial page-extractor src-doc) page-groups)
         done-one  (wait-close src-doc docs)
-        write-doc (fn [doc output]
+        write-doc (fn [^PDDocument doc ^OutputStream output]
                     (.save doc output)
                     (.close doc)
                     (done-one doc)
@@ -142,7 +149,7 @@
   "Retrieve a map of PDF metadata."
   [content]
   (log/info "Obtaining document metadata")
-  (with-open [doc (PDDocument/load (:stream content))]
+  (with-open [doc (content->doc content)]
     (let [info (.getDocumentInformation doc)]
       {:page-count (.getNumberOfPages doc)
        :version    (.getVersion doc)
@@ -159,7 +166,7 @@
   (log/info "Signing documents"
             {:certificate-alias certificate-alias})
   (let [sign-doc (fn [content output]
-                   (with-open [doc (PDDocument/load (:stream content))]
+                   (with-open [doc (content->doc content)]
                      (signing/sign-document signer
                                             doc
                                             certificate-alias
@@ -175,8 +182,8 @@
   [compression-profile content]
   (log/info "Preparing document crush"
             {:compression-profile compression-profile})
-  (fn [output]
+  (fn [^OutputStream output]
     (log/info "Crushing document pages")
-    (with-open [src-doc (PDDocument/load (:stream content))]
+    (with-open [src-doc (content->doc content)]
       (.save (crush/crush-document! src-doc compression-profile) output))
     "application/pdf"))

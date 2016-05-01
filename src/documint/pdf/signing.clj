@@ -5,7 +5,7 @@
   (:require [clojure.tools.logging :as log]
             [com.stuartsierra.component :as component])
   (:import [java.util Calendar]
-           [java.security Security]
+           [java.security Security KeyStore Provider]
            [org.bouncycastle.asn1
             ASN1Primitive
             ASN1ObjectIdentifier]
@@ -22,6 +22,7 @@
            [org.bouncycastle.operator.jcajce
             JcaContentSignerBuilder
             JcaDigestCalculatorProviderBuilder]
+           [org.apache.pdfbox.pdmodel PDDocument]
            [org.apache.pdfbox.pdmodel.interactive.digitalsignature
             PDSignature
             SignatureInterface]))
@@ -58,7 +59,7 @@
         gen    (CMSSignedDataGenerator.)
         cert   (Certificate/getInstance
                 (ASN1Primitive/fromByteArray
-                 (.getEncoded (first certificate-chain))))
+                 (.getEncoded ^java.security.Certificate (first certificate-chain))))
         signer (.. (JcaContentSignerBuilder. "SHA256withRSA")
                    (build private-key))]
     (doto gen
@@ -84,7 +85,10 @@
     "Sign a `PDDocument` with the specified certificate."))
 
 
-(defrecord SignerComponent [provider sig-ifaces certificate-passwords keystore]
+(defrecord SignerComponent [^Provider provider
+                            sig-ifaces
+                            certificate-passwords
+                            keystore]
   ISigner
   (sign-document [this document certificate-alias location reason output]
     (if-let [sig-iface (sig-ifaces certificate-alias)]
@@ -96,7 +100,7 @@
           (.setReason reason)
           (.setSignDate (Calendar/getInstance)))
         ; XXX: Protect the document?
-        (doto document
+        (doto ^PDDocument document
           (.addSignature signature sig-iface)
           (.saveIncremental output)))
       (throw (ex-info "Unknown certificate alias"
@@ -106,7 +110,7 @@
   (start [this]
     (log/info "Starting SignerComponent")
     (let [provider       (BouncyCastleProvider.)
-          make-sig-iface (fn [keystore [cert-alias password]]
+          make-sig-iface (fn [^KeyStore keystore [cert-alias ^String password]]
                            (log/info "Building SignatureInterface"
                                      {:certificate-alias cert-alias})
                            (let [cert-alias (name cert-alias)]
