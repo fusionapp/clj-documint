@@ -64,8 +64,8 @@
     `dpi`: Pixel density of the thumbnail."
   (reify IAction
     (schema [this]
-      {:input   uri?
-       :dpi long})
+      {:input uri?
+       :dpi   long})
 
     (perform [this session {:keys [input dpi]}]
       (d/chain (fetch-content input)
