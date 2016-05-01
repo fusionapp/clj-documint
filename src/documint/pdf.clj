@@ -9,11 +9,7 @@
             [documint.util :refer [wait-close time-body-ms]]
             [com.climate.claypoole :as cp])
   (:import [java.io InputStream]
-           [java.awt Color]
-           [java.awt.image BufferedImage]
-           [javax.imageio ImageIO]
            [org.apache.pdfbox.pdmodel PDDocument]
-           [org.apache.pdfbox.rendering PDFRenderer ImageType]
            [org.apache.pdfbox.multipdf PDFMergerUtility]))
 
 
@@ -46,43 +42,29 @@
       "application/pdf")))
 
 
-(defn- thumbnail-size
-  "Determine the resulting thumbnail size given the page dimensions and desired
-  breadth."
-  [dimensions breadth]
-  (let [w       (.getWidth dimensions)
-        h       (.getHeight dimensions)
-        ratio   (/ w h)
-        [nw nh] (if (> w h)
-                  [breadth (int (/ breadth ratio))]
-                  [(int (* breadth ratio)) breadth])]
-    {:w  w
-     :h  h
-     :nw nw
-     :nh nh
-     :sx (float (/ nw w))
-     :sy (float (/ nh h))}))
-
-
 (defn- page-thumbnail
-  "Create a `BufferedImage` thumbnail for a specific page index."
-  [doc renderer breadth page-index]
-  (log/info "Creating a single thumbnail image"
-            {:breadth    breadth
-             :page-index page-index})
-  (let [[ms image]
+  "Generate a page thumbnail and write it to an `OutputStream`."
+  [input page-index dpi output]
+  (log/info "Generating page thumbnail"
+            {:page-index page-index
+             :dpi        dpi})
+  (let [[ms {:keys [exit err out]}]
         (time-body-ms
-         (let [page            (.getPage doc page-index)
-               dimensions      (.getMediaBox page)
-               {:keys [sx sy]} (thumbnail-size dimensions breadth)]
-           (.renderImage renderer
-                         page-index
-                         (min 1 (max sx sy))
-                         ImageType/RGB)))]
-    (log/info "Done rendering thumbnail"
+         (clojure.java.shell/sh "convert"
+                                "-density" (str dpi)
+                                (str "-[" page-index "]")
+                                "jpeg:-"
+                                :in input
+                                :out-enc :bytes))]
+    (when-not (zero? exit)
+      (throw (ex-info "Thumbnail external process error"
+                      {:causes [[:external-process-error
+                                 {:exit-code exit
+                                  :stderr    err}]]})))
+    (log/info "Done generating thumbnail"
               {:page-index page-index
                :ms         ms})
-    image))
+    (clojure.java.io/copy out output)))
 
 
 (defn thumbnails
@@ -92,16 +74,17 @@
   be scaled accordingly."
   [breadth content]
   (log/info "Creating thumbnail images")
-  (let [doc          (PDDocument/load (:stream content))
-        renderer     (PDFRenderer. doc)
-        pages        (range (.getNumberOfPages doc))
-        done-one     (wait-close doc pages)
-        write-thumb  (fn [page-index output]
-                       (ImageIO/write (page-thumbnail doc renderer breadth page-index)
-                                      "jpg"
-                                      output)
-                       (done-one page-index)
-                       "image/jpeg")]
+  (let [baos        (java.io.ByteArrayOutputStream.)
+        _           (-> content
+                        :stream
+                        (clojure.java.io/copy baos))
+        doc         (PDDocument/load (.toByteArray baos))
+        pages       (range (.getNumberOfPages doc))
+        done-one    (wait-close doc pages)
+        write-thumb (fn [page-index output]
+                      (page-thumbnail (.toByteArray baos) page-index 100 output)
+                      (done-one page-index)
+                      "image/jpeg")]
     (map #(partial write-thumb %) pages)))
 
 
