@@ -59,7 +59,7 @@
         gen    (CMSSignedDataGenerator.)
         cert   (Certificate/getInstance
                 (ASN1Primitive/fromByteArray
-                 (.getEncoded ^Certificate (first certificate-chain))))
+                 (.getEncoded ^java.security.Certificate (first certificate-chain))))
         signer (.. (JcaContentSignerBuilder. "SHA256withRSA")
                    (build private-key))]
     (doto gen
