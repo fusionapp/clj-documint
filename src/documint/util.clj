@@ -47,7 +47,7 @@
 
   Returns a function taking one argument, the item from the `waiting` set, that
   has completed."
-  [closeable waiting]
+  [^java.io.Closeable closeable waiting]
   (let [waiting (atom (set waiting))
         done    (fn [item]
                   (swap! waiting disj item)

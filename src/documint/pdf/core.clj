@@ -1,13 +1,13 @@
 (ns documint.pdf.core
   "Documint PDF core functions."
-  (:import [org.apache.pdfbox.pdmodel PDPage]
+  (:import [org.apache.pdfbox.pdmodel PDPage PDResources]
            [org.apache.pdfbox.pdmodel.graphics.form PDFormXObject]
            [org.apache.pdfbox.pdmodel.graphics.image PDImageXObject]))
 
 
 (defn x-object-length
   "Determine the length in bytes of a `PDXObject`."
-  [x-obj]
+  [^PDFormXObject x-obj]
   (.. x-obj getStream getLength))
 
 
@@ -16,7 +16,7 @@
   ([page ^PDImageXObject x-img]
    (x-image-dpi page x-img (.getWidth x-img) (.getHeight x-img)))
 
-  ([page ^PDImageXObject x-img w h]
+  ([^PDPage page ^PDImageXObject x-img w h]
    (let [crop-box (.getCropBox page)
          dpi      72
          x-factor (/ (.getWidth crop-box) dpi)
@@ -54,7 +54,7 @@
   "Return a `seq` of all X-Objects within a set of PDF resources.
 
   `PDFormXObject` resources will be recursed into."
-  ([^PDPage page resources pred]
+  ([^PDPage page ^PDResources resources pred]
    (mapcat
     (fn [n]
       (let [x-obj (.getXObject resources n)]
