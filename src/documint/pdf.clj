@@ -2,6 +2,7 @@
   "Portable Document Format utilities."
   (:require [clojure.data.json :as json]
             [clojure.java.io :as jio]
+            [clojure.java.shell]
             [clojure.tools.logging :as log]
             [documint.pdf.crush :as crush]
             [documint.pdf.signing :as signing]
