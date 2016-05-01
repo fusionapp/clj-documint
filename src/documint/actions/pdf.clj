@@ -61,16 +61,15 @@
 
   Parameters:
     `input`: URI to a PDF document.
-    `breadth`: Widest part of the thumbnail in pixels, the shorter end will be
-        scaled accordingly."
+    `dpi`: Pixel density of the thumbnail."
   (reify IAction
     (schema [this]
-      {:input   uri?
-       :breadth long})
+      {:input uri?
+       :dpi   long})
 
-    (perform [this session {:keys [input breadth]}]
+    (perform [this session {:keys [input dpi]}]
       (d/chain (fetch-content input)
-               (partial pdf/thumbnails breadth)
+               (partial pdf/thumbnails dpi)
                (partial allocate-thunks session)
                (fn [contents]
                  {:links {:results contents}})))))
