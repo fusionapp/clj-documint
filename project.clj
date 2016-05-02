@@ -28,7 +28,8 @@
                  [com.levigo.jbig2/levigo-jbig2-imageio "1.6.5"]
                  [com.climate/claypoole "1.1.2"]
                  ]
-  :plugins [[lein-environ "1.0.0"]]
+  :plugins [[lein-environ "1.0.0"]
+            [lein-cloverage "1.0.7-SNAPSHOT"]]
   :jvm-opts ["-Djava.awt.headless=true"]
   :main ^:skip-aot documint.core
   :target-path "target/%s"

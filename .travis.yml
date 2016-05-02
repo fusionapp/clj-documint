@@ -7,3 +7,6 @@ notifications:
   email: false
   slack:
     secure: bHrylxTDs2jFN0nBm4lIKpJLQKRYwgyhVfpT3xfGlYOpjxKDDd3RHE2wVoCNwzUfmYsvcjYaW52DGx7NtzieIgE7A1syGpC1KGbg/H0dKdfvfUJXDnLCZSXmvQ0Iv/BF5bPrg2VUHtL3BVeyN/qkkV9z7gWpcjl9Cb8Bi5D9tUHMP+dj1+AnN7Jy1ScRm7p0R/Et7VeBOGg9kF97VryyHuz7VFHtohN1mYXVfM74ib3WXeqAzwoJzxJXglNT1xkY4SQRV9k34hrl5Os4aTC48uRBoUbLywq4Q25gTnY+1ETuxG/en+nrengtY9mIKIBU9RroPsKc9I0PLX99VRnM5sQc/bkTHHnHX4LyZ7k5gpRlS968xGbVJnKvvgziuAUoOaUJ13gPYz46u460e8jgqmvnn6as7cavMhNxDPLKxmWuI4y90Qp0HHu4IZPCeBbxXbF+1bSb2VGSx1RCuVaDL5n2WqBtYoK75PrnMXY5uO7V88oxgwqaIQM2WkVMPAJ/qWyhdX5QWzMjQL+xDuJqoq+/BJPGn7MeoE/5Xi5qF1TyJW20dTsSBny36mIbx3WXmu5uEqGAMNJ1xDiXxIzs0D/UQxYheizqaNKJm5u75Oom8QeAnQyeM+8IdiYHIvz8dIMsEfm/71pzzJF7LvgxgH8t21UapjPqHTUPkNN3CBg=
+after_success:
+- CLOVERAGE_VERSION=1.0.7-SNAPSHOT lein cloverage --codecov
+- bash <(curl -s https://codecov.io/bash) -f target/coverage/codecov.json
