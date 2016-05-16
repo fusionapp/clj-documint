@@ -60,7 +60,7 @@
         (time-body-ms
          (clojure.java.shell/sh "convert"
                                 "-density" (str dpi)
-                                (str "-[" page-index "]")
+                                (str "pdf:-[" page-index "]")
                                 "jpeg:-"
                                 :in input
                                 :out-enc :bytes))]
