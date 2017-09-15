@@ -322,11 +322,11 @@
    ::content-resource (content-resource session-factory)})
 
 
-(defrecord App [app session-factory]
+(defrecord App [handler session-factory]
   component/Lifecycle
   (start [this]
     (let [handlers (route-handlers session-factory)]
-      (assoc this :app
+      (assoc this :handler
              (-> (make-handler routes handlers)
                  #_(wrap-trace :header :ui)
                  (wrap-defaults api-defaults)))))

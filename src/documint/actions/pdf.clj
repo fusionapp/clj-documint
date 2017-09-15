@@ -2,7 +2,7 @@
   "Documint PDF actions.
 
   A collection of `IAction` implementations for manipulating PDF documents."
-  (:require [reloaded.repl :refer [system]]
+  (:require [system.repl :refer [system]]
             [manifold.deferred :as d]
             [schema.core :as s]
             [documint.session :as session]
