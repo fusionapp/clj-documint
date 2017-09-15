@@ -6,6 +6,7 @@
             [clojure.tools.logging :as log]
             [documint.pdf.crush :as crush]
             [documint.pdf.signing :as signing]
+            [documint.pdf.stamp :as stamp]
             [documint.render :refer [render]]
             [documint.util :refer [wait-close time-body-ms]]
             [com.climate.claypoole :as cp])
@@ -187,3 +188,15 @@
     (with-open [src-doc (content->doc content)]
       (.save (crush/crush-document! src-doc compression-profile) output))
     "application/pdf"))
+
+
+(defn stamp
+  "Stamp documents with a watermark document."
+  [watermark contents]
+  (log/info "Stamping documents")
+  (letfn [(watermark-doc [content output]
+            (with-open [src-doc (content->doc content)
+                        stamp-doc (content->doc watermark)]
+              (.save (stamp/stamp stamp-doc src-doc) output))
+            "application/pdf")]
+    (map #(partial watermark-doc %) contents)))

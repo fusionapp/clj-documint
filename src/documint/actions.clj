@@ -16,7 +16,8 @@
    "split"       pdf-actions/split
    "metadata"    pdf-actions/metadata
    "sign"        pdf-actions/sign
-   "crush"       pdf-actions/crush})
+   "crush"       pdf-actions/crush
+   "stamp"       pdf-actions/stamp})
 
 
 (defn- realize-response
