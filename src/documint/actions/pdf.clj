@@ -2,7 +2,7 @@
   "Documint PDF actions.
 
   A collection of `IAction` implementations for manipulating PDF documents."
-  (:require [reloaded.repl :refer [system]]
+  (:require [system.repl :refer [system]]
             [manifold.deferred :as d]
             [schema.core :as s]
             [documint.session :as session]
@@ -153,3 +153,22 @@
                (partial allocate-thunks session)
                (fn [content]
                  {:links {:result content}})))))
+
+
+(def stamp
+  "Stamp one or more documents with a watermark document.
+
+  Parameters:
+    `inputs`: URIs to PDF documents to be stamped.
+    `watermark`: URI to a PDF document to use as the stamp."
+  (reify IAction
+    (schema [this]
+      {:inputs            [uri?]
+       :watermark         uri?})
+    (perform [this session {:keys [inputs watermark]}]
+      (d/chain (fetch-multiple-contents (cons watermark inputs))
+               (fn [[watermark & inputs]]
+                 (pdf/stamp watermark inputs))
+               (partial allocate-thunks session)
+               (fn [contents]
+                 {:links {:results contents}})))))
