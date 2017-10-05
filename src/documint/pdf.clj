@@ -195,7 +195,10 @@
   [watermark contents]
   (log/info "Stamping documents")
   (letfn [(watermark-doc [content output]
-            (with-open [src-doc (content->doc content)
+            (with-open [src-doc (doto (content->doc content)
+                                  ;; Strip security from the source so we can
+                                  ;; modify the document.
+                                  (.setAllSecurityToBeRemoved true))
                         stamp-doc (content->doc watermark)]
               (.save (stamp/stamp stamp-doc src-doc) output))
             "application/pdf")]
