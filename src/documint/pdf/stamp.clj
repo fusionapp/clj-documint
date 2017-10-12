@@ -48,7 +48,7 @@
 
 
 (defn- append-form-as-layer
-  "Add an `PDFormXObject` to a page, with a transformation, in an Optional
+  "Add a `PDFormXObject` to a page, with a transformation, in an Optional
   Content Group."
   [^PDDocument document
    ^PDFormXObject xobj
