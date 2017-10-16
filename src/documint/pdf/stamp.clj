@@ -34,6 +34,7 @@
 
 (defn- transformation [align src dst]
   (let [transform (AffineTransform.)
+        rot       (.getRotation dst)
         [dw dh]   (portrait-orientation (page-cropbox dst))
         [sw sh]   (portrait-orientation (page-cropbox src))]
     (if (landscape? dst)
@@ -44,6 +45,10 @@
       (case align
         :bottom-right (doto transform
                         (.translate (- dw sw) (- dh sh)))))
+    ;; This means the page is upside down, correct for this by rotating another
+    ;; 180 degrees.
+    (when (>= rot 180)
+      (.rotate transform (Math/toRadians 180) (/ dw 2) (/ dh 2)))
     transform))
 
 
