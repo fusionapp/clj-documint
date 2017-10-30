@@ -70,7 +70,9 @@
     (with-open [stream (PDPageContentStream. document
                                              page
                                              PDPageContentStream$AppendMode/APPEND
-                                             true)]
+                                             true ;; Compress?
+                                             true ;; Reset context?
+                                             )]
       (doto stream
         (.beginMarkedContent COSName/OC layer)
         (.saveGraphicsState)
