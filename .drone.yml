@@ -1,5 +1,5 @@
-workspace:                                            
-  base: /drone                  
+workspace:
+  base: /drone
   path: src/github.com/fusionapp/clj-documint
 pipeline:
   restore_cache:
