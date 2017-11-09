@@ -12,6 +12,11 @@ pipeline:
     ignore_branch: true
     mount:
       - m2
+    when:
+      event:
+        - push
+        - pull_request
+        - tag
     secrets:
       - sftp_cache_password
   uberjar:
@@ -19,6 +24,11 @@ pipeline:
     pull: true
     commands:
       - /usr/local/bin/lein with-profile +drone uberjar
+    when:
+      event:
+        - push
+        - pull_request
+        - tag
   rebuild_cache:
     image: appleboy/drone-sftp-cache
     server: sftp-cache.drone7.non-production.fusionapp.com
@@ -85,6 +95,17 @@ pipeline:
     secrets:
       - slack_webhook
     when:
+      status:
+        - success
+        - failure
+  slack_production:
+    image: plugins/slack
+    secrets:
+      - slack_webhook
+    channel: production
+    when:
+      event: deployment
+      environment: production
       status:
         - success
         - failure
