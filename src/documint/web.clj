@@ -35,7 +35,11 @@
 
 
   DELETE /<session_uri>
-    Remove a session and all its contents. "
+    Remove a session and all its contents.
+
+
+  GET /metrics
+    Retrieve Prometheus metrics. "
   (:require [clojure.data.json :as json]
             [clojure.tools.logging :as log]
             [com.stuartsierra.component :as component]
@@ -44,11 +48,13 @@
             [bidi.bidi :as bidi]
             [bidi.ring :refer [make-handler]]
             [ring.middleware.defaults :refer [wrap-defaults api-defaults]]
+            [iapetos.collector.ring :as ring]
             [manifold.deferred :as d]
             [documint.content :as content]
             [documint.session :as session]
             [documint.actions :refer [perform-action]]
-            [documint.util :refer [transform-map]])
+            [documint.util :refer [transform-map]]
+            [documint.metrics :refer [registry]])
   (:import [org.eclipse.jetty.server SslConnectionFactory]))
 
 
@@ -322,6 +328,13 @@
    ::content-resource (content-resource session-factory)})
 
 
+(defn- path-fn
+  "Describe a request path according to a route map"
+  [routes]
+  (fn [{uri :uri}]
+    (pr-str (:handler (bidi/match-route routes uri)))))
+
+
 (defrecord App [handler session-factory]
   component/Lifecycle
   (start [this]
@@ -329,7 +342,9 @@
       (assoc this :handler
              (-> (make-handler routes handlers)
                  #_(wrap-trace :header :ui)
-                 (wrap-defaults api-defaults)))))
+                 (wrap-defaults api-defaults)
+                 (ring/wrap-metrics registry {:path "/metrics"
+                                              :path-fn (path-fn routes)})))))
 
   (stop [this]
     this))

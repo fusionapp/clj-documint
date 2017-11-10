@@ -5,8 +5,10 @@
   turn implement the public API for interacting with sessions."
   (:require [clojure.tools.logging :as log]
             [manifold.time :refer [in minutes]]
+            [iapetos.core :as prometheus]
             [documint.content :as content]
-            [documint.util :refer [uuid-str]]))
+            [documint.util :refer [uuid-str]]
+            [documint.metrics :refer [registry]]))
 
 
 (defprotocol ISession
@@ -39,7 +41,8 @@
     (log/info "Destroying session"
               {:id id})
     (content/destroy storage)
-    (destroy))
+    (destroy)
+    (prometheus/dec (registry :documint/sessions-active-total)))
 
   (allocate-thunk [this thunk]
     (content/allocate-entry storage id thunk))
@@ -72,6 +75,7 @@
                                  :storage (storage-factory)})]
       (swap! sessions assoc id session)
       (in ttl #(destroy session))
+      (prometheus/inc (registry :documint/sessions-active-total))
       session))
 
   (get-session [this id]

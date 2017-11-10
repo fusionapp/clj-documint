@@ -3,10 +3,12 @@
   (:require [manifold.deferred :as d]
             [schema.core :as s]
             [com.climate.claypoole :as cp]
+            [iapetos.core :as prometheus]
             [documint.actions.interfaces :refer [perform schema]]
             [documint.actions.pdf :as pdf-actions]
             [documint.content :as content]
-            [documint.util :refer [ptransform-map]]))
+            [documint.util :refer [ptransform-map]]
+            [documint.metrics :refer [registry]]))
 
 
 (def ^:private known-actions
@@ -48,8 +50,16 @@
   [action-name parameters session]
   (if-let [action (get known-actions action-name)]
     (try
-      (d/chain (perform action session (s/validate (schema action) parameters))
-               (partial realize-response pool))
+      (prometheus/with-duration
+        (registry :documint/actions-seconds {:action action-name})
+        (prometheus/with-activity-counter
+          (registry :documint/actions-running-total {:action action-name})
+          (prometheus/with-counters
+            {:total (registry :documint/actions-total {:action action-name})
+             :success (registry :documint/actions-succeeded-total {:action action-name})
+             :failure (registry :documint/actions-failed-total {:action action-name})}
+            (d/chain (perform action session (s/validate (schema action) parameters))
+                     (partial realize-response pool)))))
       (catch clojure.lang.ExceptionInfo e
         (let [data (ex-data e)]
           (throw
