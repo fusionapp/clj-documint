@@ -8,7 +8,9 @@
             [documint.actions.pdf :as pdf-actions]
             [documint.content :as content]
             [documint.util :refer [ptransform-map]]
-            [documint.metrics :refer [registry]]))
+            [documint.metrics
+             :refer [registry]
+             :as metrics]))
 
 
 (def ^:private known-actions
@@ -49,24 +51,27 @@
   "Perform an `IAction` by name."
   [action-name parameters session]
   (if-let [action (get known-actions action-name)]
-    (try
-      (prometheus/with-duration
-        (registry :documint/actions-seconds {:action action-name})
-        (prometheus/with-activity-counter
-          (registry :documint/actions-running-total {:action action-name})
-          (prometheus/with-counters
-            {:total (registry :documint/actions-total {:action action-name})
-             :success (registry :documint/actions-succeeded-total {:action action-name})
-             :failure (registry :documint/actions-failed-total {:action action-name})}
-            (d/chain (perform action session (s/validate (schema action) parameters))
-                     (partial realize-response pool)))))
-      (catch clojure.lang.ExceptionInfo e
-        (let [data (ex-data e)]
-          (throw
-           (if (= (:type data) :schema.core/error)
-             (ex-info "Schema validation failure"
-                      {:causes [[:validation-failure
-                                 (select-keys data [:error])]]})
-             e)))))
+    (prometheus/with-failure-counter
+      (registry :documint/actions-errored-total {:action action-name})
+      (try
+        (->>
+         (d/chain (perform action session (s/validate (schema action) parameters))
+                  (partial realize-response pool))
+         (metrics/async-duration
+          (registry :documint/actions-seconds {:action action-name}))
+         (metrics/async-activity-counter
+          (registry :documint/actions-running-total {:action action-name}))
+         (metrics/async-counters
+          {:total (registry :documint/actions-total {:action action-name})
+           :success (registry :documint/actions-succeeded-total {:action action-name})
+           :failure (registry :documint/actions-failed-total {:action action-name})}))
+        (catch clojure.lang.ExceptionInfo e
+          (let [data (ex-data e)]
+            (throw
+             (if (= (:type data) :schema.core/error)
+               (ex-info "Schema validation failure"
+                        {:causes [[:validation-failure
+                                   (select-keys data [:error])]]})
+               e))))))
     (throw (ex-info "Unknown action"
                     {:causes [[:unknown-action action-name]]}))))
