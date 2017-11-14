@@ -1,6 +1,7 @@
 (set-env!
  :resource-paths #{"src"}
  :dependencies '[[org.clojure/clojure "1.8.0"]
+                 [danielsz/boot-environ "0.0.5"]
                  [org.clojure/tools.cli "0.3.5"]
                  [org.clojure/tools.logging "0.4.0"]
                  [org.clojure/tools.nrepl "0.2.13"]
