@@ -54,7 +54,7 @@
     (prometheus/with-failure-counter
       (registry :documint/actions-errored-total {:action action-name})
       (try
-        (->>
+        (->
          (d/chain (perform action session (s/validate (schema action) parameters))
                   (partial realize-response pool))
          (metrics/async-duration

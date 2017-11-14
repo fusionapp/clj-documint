@@ -28,19 +28,19 @@
 
 (defn- bracket
   "Bracket an async operation in some other calls"
-  ([before success failure always d]
+  ([d before success failure always]
    (let [result (before)]
      (d/finally
        (d/on-realized d
         (tapf success result)
         (tapf failure result))
        (partial always result))))
-  ([success failure always d]
-   (bracket pass (const success) (const failure) (const always) d))
-  ([before always d]
-   (bracket before pass pass always d))
-  ([always d]
-   (bracket pass pass pass (const always) d)))
+  ([d success failure always]
+   (bracket d pass (const success) (const failure) (const always)))
+  ([d before always]
+   (bracket d before pass pass always))
+  ([d always]
+   (bracket d pass pass pass (const always))))
 
 
 (defn async-duration
@@ -48,8 +48,8 @@
    collector.
   
    Works with [[gauge]], [[histogram]] and [[summary]] collectors."
-  [collector d]
-  (bracket (partial prometheus/start-timer collector) #(%) d))
+  [d collector]
+  (bracket d (partial prometheus/start-timer collector) #(%)))
 
 
 (defn async-activity-counter
@@ -58,10 +58,10 @@
    collector (since [[counter]] ones cannot be decremented).
 
    Example: Counting the number of in-flight requests in an HTTP server."
-  [collector d]
-  (bracket (partial prometheus/inc collector)
-           (const prometheus/dec collector)
-           d))
+  [d collector]
+  (bracket d
+           (partial prometheus/inc collector)
+           (const prometheus/dec collector)))
 
 
 (defn async-counters
@@ -70,11 +70,11 @@
    - `:total`: incremented when the block is left,
    - `:success`: incremented when the block has executed successfully,
    - `:failure`: incremented when the block has thrown an exception."
-  [{:keys [total success failure]} d]
-  (bracket (partial prometheus/inc success)
+  [d {:keys [total success failure]}]
+  (bracket d
+           (partial prometheus/inc success)
            (partial prometheus/inc failure)
-           (partial prometheus/inc total)
-           d))
+           (partial prometheus/inc total)))
 
 
 (defonce registry
