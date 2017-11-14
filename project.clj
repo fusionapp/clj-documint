@@ -27,6 +27,8 @@
                  [com.twelvemonkeys.imageio/imageio-metadata "3.3.2"]
                  [com.levigo.jbig2/levigo-jbig2-imageio "2.0"]
                  [com.climate/claypoole "1.1.4"]
+                 [iapetos "0.1.7"]
+                 [io.prometheus/simpleclient_hotspot "0.1.0"]
                  ]
   :plugins [[lein-environ "1.0.0"]
             [lein-cloverage "1.0.7-SNAPSHOT"]]
