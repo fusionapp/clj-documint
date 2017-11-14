@@ -41,7 +41,7 @@
   []
   (comp
    (watch :verbose true)
-   (system :sys #'dev-system :auto true)
+   (system :sys #'dev-system :auto true :files ["clj$"] :regexes true)
    (repl :server true)))
 
 
