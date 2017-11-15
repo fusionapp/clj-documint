@@ -109,3 +109,15 @@
                      (resolve '~expr)
                      (resolve (first '~expr)))]
        [(/ (double (- (. System (nanoTime)) start#)) 1000000.0) return#])))
+
+
+(defn swap-vals!
+  "Like swap-vals! in Clojure 1.9."
+  [atom f & args]
+  (let [m       (volatile! nil)
+        new-val (apply swap! atom
+                       (fn [val & args]
+                         (vreset! m val)
+                         (apply f val args))
+                       args)]
+    [@m new-val]))

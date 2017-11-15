@@ -7,7 +7,7 @@
             [manifold.time :refer [in minutes]]
             [iapetos.core :as prometheus]
             [documint.content :as content]
-            [documint.util :refer [uuid-str]]
+            [documint.util :refer [uuid-str swap-vals!]]
             [documint.metrics :refer [registry]]))
 
 
@@ -41,8 +41,8 @@
     (log/info "Destroying session"
               {:id id})
     (content/destroy storage)
-    (destroy)
-    (prometheus/dec (registry :documint/sessions-active-total)))
+    (when (destroy)
+      (prometheus/dec (registry :documint/sessions-active-total))))
 
   (allocate-thunk [this thunk]
     (content/allocate-entry storage id thunk))
@@ -71,8 +71,11 @@
   (new-session [this]
     (let [id      (next-id)
           session (map->Session {:id      id
-                                 :destroy #(swap! sessions dissoc id)
-                                 :storage (storage-factory)})]
+                                 :storage (storage-factory)
+                                 :destroy
+                                 (fn -destroy []
+                                   (let [[old new] (swap-vals! sessions dissoc id)]
+                                     (contains? old id)))})]
       (swap! sessions assoc id session)
       (in ttl #(destroy session))
       (prometheus/inc (registry :documint/sessions-active-total))
