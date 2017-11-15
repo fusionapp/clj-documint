@@ -41,8 +41,8 @@
     (log/info "Destroying session"
               {:id id})
     (content/destroy storage)
-    (destroy)
-    (prometheus/dec (registry :documint/sessions-active-total)))
+    (when (destroy)
+      (prometheus/dec (registry :documint/sessions-active-total))))
 
   (allocate-thunk [this thunk]
     (content/allocate-entry storage id thunk))
@@ -71,7 +71,9 @@
   (new-session [this]
     (let [id      (next-id)
           session (map->Session {:id      id
-                                 :destroy #(swap! sessions dissoc id)
+                                 :destroy (fn -destroy []
+                                            (when (contains? @sessions id)
+                                              (swap! sessions dissoc id)))
                                  :storage (storage-factory)})]
       (swap! sessions assoc id session)
       (in ttl #(destroy session))
