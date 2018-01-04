@@ -44,7 +44,7 @@
                         (.translate (- dw sw) (- (+ sh (- dh sh))))))
       (case align
         :bottom-right (doto transform
-                        (.translate (- dw sw) (min 0 (- dh sh))))))
+                        (.translate (- dw sw) (max 0 (- dh sh))))))
     ;; This means the page is upside down, correct for this by rotating another
     ;; 180 degrees.
     (when (>= rot 180)
