@@ -52,6 +52,23 @@
     transform))
 
 
+(defn- safe-content-properties
+  "Fetch the `PDOPtionalContentProperties` and `PDOptionalContentGroup` for a
+  layer in a document.
+
+  In some cases this object can exist in the document but be corrupt (e.g. the
+  content properties is an object instead of a dictionary etc.)"
+  [document layer-name]
+  (let [ocprops-empty (PDOptionalContentProperties.)
+        ocprops       (or (.. document (getDocumentCatalog) (getOCProperties))
+                          ocprops-empty)
+        ocg-empty     (PDOptionalContentGroup. layer-name)]
+    (try
+      [ocprops (or (.getGroup ocprops layer-name) ocg-empty)]
+      (catch ClassCastException _
+        [ocprops-empty ocg-empty]))))
+
+
 (defn- append-form-as-layer
   "Add a `PDFormXObject` to a page, with a transformation, in an Optional
   Content Group."
@@ -60,10 +77,7 @@
    ^PDPage page
    ^AffineTransform transform
    ^String layer-name]
-  (let [ocprops (or (.. document (getDocumentCatalog) (getOCProperties))
-                    (PDOptionalContentProperties.))
-        layer   (or (.getGroup ocprops layer-name)
-                    (PDOptionalContentGroup. layer-name))]
+  (let [[ocprops layer] (safe-content-properties document layer-name)]
     (when-not (.hasGroup ocprops layer-name)
       (.addGroup ocprops layer))
 
