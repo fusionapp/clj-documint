@@ -29,6 +29,16 @@ pipeline:
         - push
         - pull_request
         - tag
+  build_docs:
+    image: idnar/lein
+    pull: true
+    commands:
+      - /usr/local/bin/lein with-profile +drone codox
+    when:
+      event:
+        - push
+        - pull_request
+        - tag
   rebuild_cache:
     image: appleboy/drone-sftp-cache
     server: sftp-cache.drone7.non-production.fusionapp.com
@@ -44,6 +54,15 @@ pipeline:
       branch: master
     secrets:
       - sftp_cache_password
+  publish_docs:
+    image: plugins/gh-pages
+    pages_directory: target/codox
+    upstream_name: git@github.com:fusionapp/clj-documint.git
+    secrets:
+      - git_push_ssh_key
+    when:
+      event: push
+      branch: master
   publish:
     image: plugins/docker
     repo: eu.gcr.io/fusion-168903/clj-documint
