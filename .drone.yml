@@ -47,7 +47,7 @@ pipeline:
       - git_push_ssh_key
     when:
       event: push
-      branch: 90-readme
+      branch: master
   rebuild_cache:
     image: appleboy/drone-sftp-cache
     server: sftp-cache.drone7.non-production.fusionapp.com
@@ -132,4 +132,3 @@ branches:
   - master
   - staging
   - trying
-  - 90-readme
