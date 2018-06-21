@@ -12,7 +12,7 @@
 
   * Copy `documint.config.json.example` to `documint.config.json` and adjust the
     configuration to suit your environment. (See below for setting up the keystore
-    and truststore if neccessary.)
+    and truststore if necessary.)
   * Run `boot dev` to run the hot-reloading development version of the service.
   
     Any dependencies will be downloaded by boot and afterwards the service should
