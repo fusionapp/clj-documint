@@ -37,7 +37,7 @@ pipeline:
     when:
       event:
         - push
-        - pull-request
+        - pull_request
         - tag
   rebuild_cache:
     image: appleboy/drone-sftp-cache
