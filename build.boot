@@ -1,4 +1,5 @@
 (set-env!
+ :source-paths #{"src"}
  :resource-paths #{"src"}
  :dependencies '[[org.clojure/clojure "1.8.0"]
                  [danielsz/boot-environ "0.0.5"]
@@ -27,6 +28,8 @@
                  [com.climate/claypoole "1.1.4"]
                  [iapetos "0.1.7"]
                  [io.prometheus/simpleclient_hotspot "0.1.0"]
+
+                 [boot-codox "0.10.4"]
                  ])
 
 
@@ -34,7 +37,9 @@
  '[system.repl :as repl :refer [start stop go reset]]
  '[documint.systems :refer [dev-system]]
  '[danielsz.boot-environ :refer [environ]]
- '[system.boot :refer [system run]])
+ '[system.boot :refer [system run]]
+ '[codox.boot :refer [codox]]
+ )
 
 
 (deftask dev
@@ -63,3 +68,11 @@
         :version "0.1.0-SNAPSHOT")
    (uber)
    (jar :main 'documint.core)))
+
+
+(deftask docs
+  "Build the documentation with Codox"
+  []
+  (codox :name "documint"
+         :output-path "target/codox"
+         :source-uri "https://github.com/fusionapp/clj-documint/blob/master/{filepath}#L{line}"))

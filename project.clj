@@ -1,5 +1,5 @@
 (defproject documint "0.1.0-SNAPSHOT"
-  :description "Document processing service"
+  :description "An HTTP document processing service"
   :url "http://github.com/fusionapp/clj-documint"
   :license {:name "MIT License"
             :url "http://opensource.org/licenses/MIT"}
@@ -31,10 +31,14 @@
                  [io.prometheus/simpleclient_hotspot "0.1.0"]
                  ]
   :plugins [[lein-environ "1.0.0"]
-            [lein-cloverage "1.0.7-SNAPSHOT"]]
+            [lein-cloverage "1.0.7-SNAPSHOT"]
+            [lein-codox "0.10.4"]
+            ]
   :jvm-opts ["-Djava.awt.headless=true"]
   :main ^:skip-aot documint.core
   :target-path "target/%s"
+  :codox {:source-uri "https://github.com/fusionapp/clj-documint/blob/master/{filepath}#L{line}"
+          :output-path "target/codox"}
   :profiles {:dev {:source-paths ["dev"]}
              :uberjar {:aot :all}
              :drone {:local-repo "m2"}})
