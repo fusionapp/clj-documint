@@ -42,6 +42,7 @@ pipeline:
   publish_docs:
     image: plugins/gh-pages
     pages_directory: target/codox
+    upstream_name: git@github.com:fusionapp/clj-documint.git
     when:
       event: push
       branch: 90-readme
