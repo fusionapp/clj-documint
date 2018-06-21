@@ -43,6 +43,8 @@ pipeline:
     image: plugins/gh-pages
     pages_directory: target/codox
     upstream_name: git@github.com:fusionapp/clj-documint.git
+    secrets:
+      - git_push_ssh_key
     when:
       event: push
       branch: 90-readme
