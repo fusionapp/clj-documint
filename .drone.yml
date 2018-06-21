@@ -29,6 +29,22 @@ pipeline:
         - push
         - pull_request
         - tag
+  build_docs:
+    image: idnar/lein
+    pull: true
+    commands:
+      - /usr/local/bin/lein with-profile +drone codox
+    when:
+      event:
+        - push
+        - pull-request
+        - tag
+  publish_docs:
+    image: plugins/gh-pages
+    pages_directory: target/codox
+    when:
+      event: push
+      branch: 90-readme
   rebuild_cache:
     image: appleboy/drone-sftp-cache
     server: sftp-cache.drone7.non-production.fusionapp.com
@@ -113,3 +129,4 @@ branches:
   - master
   - staging
   - trying
+  - 90-readme
