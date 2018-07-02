@@ -23,8 +23,8 @@ pipeline:
     image: idnar/lein
     pull: true
     commands:
-      # Specify the repo path directly instead of using the `drone` profile to
-      # workaround some unexplained error with localrepo.
+      # Avoid `with-profile` because of bad behaviour in `lein-localrepo`:
+      # https://github.com/kumarshantanu/lein-localrepo/issues/13
       - /usr/local/bin/lein localrepo install --repo m2 resources/css2xslfo1_6_2.jar com.fusionapp/css2xslfo 1.6.2
       - /usr/local/bin/lein with-profile +drone uberjar
       - /usr/local/bin/lein with-profile +drone codox
