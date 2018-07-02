@@ -29,6 +29,7 @@
                  [iapetos "0.1.7"]
                  [io.prometheus/simpleclient_hotspot "0.1.0"]
 
+                 [com.fusionapp/css2xslfo "1.6.2"]
                  [boot-codox "0.10.4"]
                  ])
 

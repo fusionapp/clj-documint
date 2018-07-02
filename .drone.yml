@@ -19,20 +19,12 @@ pipeline:
         - tag
     secrets:
       - sftp_cache_password
-  uberjar:
+  lein:
     image: idnar/lein
     pull: true
     commands:
+      - /usr/local/bin/lein with-profile +drone localrepo install resources/css2xslfo1_6_2.jar com.fusionapp/css2xslfo 1.6.2
       - /usr/local/bin/lein with-profile +drone uberjar
-    when:
-      event:
-        - push
-        - pull_request
-        - tag
-  build_docs:
-    image: idnar/lein
-    pull: true
-    commands:
       - /usr/local/bin/lein with-profile +drone codox
     when:
       event:
