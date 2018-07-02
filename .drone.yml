@@ -22,6 +22,7 @@ pipeline:
     image: idnar/lein
     pull: true
     commands:
+      - mkdir -p m2
       # Avoid `with-profile` because of bad behaviour in `lein-localrepo`:
       # https://github.com/kumarshantanu/lein-localrepo/issues/13
       - /usr/local/bin/lein localrepo install --repo m2 resources/css2xslfo1_6_2.jar com.fusionapp/css2xslfo 1.6.2
