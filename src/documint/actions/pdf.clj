@@ -31,7 +31,31 @@
 
     (perform [this session {:keys [input base-uri]}]
       (d/chain (fetch-content input)
-               (partial pdf/render-html (:renderer system) {:base-uri base-uri})
+               (partial pdf/render-html
+                        (:renderer/flying-saucer system)
+                        {:base-uri base-uri})
+               vector
+               (partial allocate-thunks session)
+               (fn [content]
+                 {:links {:result content}})))))
+
+
+(def render-legacy-html
+  "Render an HTML document to a PDF document using CSS2XSLFO and Apache FOP.
+
+  Parameters:
+    `input`: URI to the HTML content to render.
+    `base-uri`: Base URI to use when resolving relative URIs."
+  (reify IAction
+    (schema [this]
+      {:input                     uri?
+       (s/optional-key :base-uri) uri?})
+
+    (perform [this session {:keys [input base-uri]}]
+      (d/chain (fetch-content input)
+               (partial pdf/render-html
+                        (:renderer/fop system)
+                        {:base-uri base-uri})
                vector
                (partial allocate-thunks session)
                (fn [content]

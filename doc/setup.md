@@ -10,6 +10,12 @@
 
 ## Development
 
+  * Install the free-standing `css2xslfo` jar into your local Maven repo from
+    your checkout directory:
+
+    ```
+    $ lein localrepo install resources/css2xslfo1_6_2.jar com.fusionapp/css2xslfo 1.6.2
+    ```
   * Copy `documint.config.json.example` to `documint.config.json` and adjust the
     configuration to suit your environment. (See below for setting up the keystore
     and truststore if necessary.)

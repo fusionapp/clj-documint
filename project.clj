@@ -29,10 +29,13 @@
                  [com.climate/claypoole "1.1.4"]
                  [iapetos "0.1.7"]
                  [io.prometheus/simpleclient_hotspot "0.1.0"]
+                 [org.apache.xmlgraphics/fop "2.2"]
+                 [com.fusionapp/css2xslfo "1.6.2"]
                  ]
   :plugins [[lein-environ "1.0.0"]
             [lein-cloverage "1.0.7-SNAPSHOT"]
             [lein-codox "0.10.4"]
+            [lein-localrepo "0.5.4"]
             ]
   :jvm-opts ["-Djava.awt.headless=true"]
   :main ^:skip-aot documint.core

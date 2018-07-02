@@ -14,14 +14,15 @@
 
 
 (def ^:private known-actions
-  {"render-html" pdf-actions/render-html
-   "concat"      pdf-actions/concatenate
-   "thumbnails"  pdf-actions/thumbnails
-   "split"       pdf-actions/split
-   "metadata"    pdf-actions/metadata
-   "sign"        pdf-actions/sign
-   "crush"       pdf-actions/crush
-   "stamp"       pdf-actions/stamp})
+  {"render-html"        pdf-actions/render-html
+   "render-legacy-html" pdf-actions/render-legacy-html
+   "concat"             pdf-actions/concatenate
+   "thumbnails"         pdf-actions/thumbnails
+   "split"              pdf-actions/split
+   "metadata"           pdf-actions/metadata
+   "sign"               pdf-actions/sign
+   "crush"              pdf-actions/crush
+   "stamp"              pdf-actions/stamp})
 
 
 (defn- realize-response
