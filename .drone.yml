@@ -3,22 +3,21 @@ workspace:
   path: src/github.com/fusionapp/clj-documint
 pipeline:
   restore_cache:
-    image: appleboy/drone-sftp-cache
-    server: sftp-cache.drone7.non-production.fusionapp.com
-    port: 45945
-    username: drone-cache
-    path: /drone-cache
+    image: plugins/s3-cache
+    pull: true
+    endpoint: https://s3.amazonaws.com
+    root: /drone-cache-fusionapp-useast
     restore: true
-    ignore_branch: true
     mount:
       - m2
+    secrets:
+      - aws_access_key_id
+      - aws_secret_access_key
     when:
       event:
         - push
         - pull_request
         - tag
-    secrets:
-      - sftp_cache_password
   lein:
     image: idnar/lein
     pull: true
@@ -34,20 +33,33 @@ pipeline:
         - pull_request
         - tag
   rebuild_cache:
-    image: appleboy/drone-sftp-cache
-    server: sftp-cache.drone7.non-production.fusionapp.com
-    port: 45945
-    username: drone-cache
-    path: /drone-cache
+    image: plugins/s3-cache
+    pull: true
+    endpoint: https://s3.amazonaws.com
+    root: /drone-cache-fusionapp-useast
     rebuild: true
-    ignore_branch: true
     mount:
       - m2
+    secrets:
+      - aws_access_key_id
+      - aws_secret_access_key
     when:
       event: push
-      branch: master
+      branch:
+        - master
+  flush_cache:
+    image: plugins/s3-cache
+    pull: true
+    endpoint: https://s3.amazonaws.com
+    root: /drone-cache-fusionapp-useast
+    flush: true
     secrets:
-      - sftp_cache_password
+      - aws_access_key_id
+      - aws_secret_access_key
+    when:
+      event: push
+      branch:
+        - master
   publish_docs:
     image: plugins/gh-pages
     pages_directory: target/codox
@@ -58,27 +70,27 @@ pipeline:
       event: push
       branch: master
   publish:
-    image: plugins/docker
-    repo: eu.gcr.io/fusion-168903/clj-documint
+    image: plugins/ecr
+    region: eu-west-1
+    registry: 801493518741.dkr.ecr.eu-west-1.amazonaws.com
+    repo: 801493518741.dkr.ecr.eu-west-1.amazonaws.com/clj-documint
     tags:
       - ${DRONE_BRANCH}
       - git-${DRONE_COMMIT_SHA}
-    registry: eu.gcr.io
-    mirror: https://eu-mirror.gcr.io
-    username: _json_key
     when:
       event: push
       branch: master
     secrets:
-      - docker_password
+      - ecr_access_key
+      - ecr_secret_key
   deploy-uat:
     image: peloton/drone-rancher
     url: https://rancher.fusionapp.com
     service: Fusion/clj-documint
-    docker_image: eu.gcr.io/fusion-168903/clj-documint:git-${DRONE_COMMIT_SHA}
+    docker_image: 801493518741.dkr.ecr.eu-west-1.amazonaws.com/clj-documint:git-${DRONE_COMMIT_SHA}
     start_first: false
     confirm: true
-    timeout: 120
+    timeout: 240
     when:
       event: push
       branch: master
@@ -91,10 +103,10 @@ pipeline:
     image: peloton/drone-rancher
     url: https://rancher.fusionapp.com
     service: fusion/clj-documint
-    docker_image: eu.gcr.io/fusion-168903/clj-documint:git-${DRONE_COMMIT_SHA}
+    docker_image: 801493518741.dkr.ecr.eu-west-1.amazonaws.com/clj-documint:git-${DRONE_COMMIT_SHA}
     start_first: false
     confirm: true
-    timeout: 120
+    timeout: 240
     when:
       event: deployment
       environment: production
