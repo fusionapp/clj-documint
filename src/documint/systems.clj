@@ -6,6 +6,7 @@
              [jetty :refer [new-web-server]])
             [documint.web :as web]
             [documint.render.flying-saucer :as saucer]
+            [documint.render.fop :as fop]
             [documint.session :refer [temp-file-session-factory]]
             [documint.config :refer [load-config]]
             [documint.pdf.signing :refer [signer-component]]
@@ -22,21 +23,23 @@
                      (open-keystore (conf [:truststore :path])
                                     (conf [:truststore :password])))]
     (component/system-map
-     :keystore        keystore
-     :truststore      truststore
-     :session-factory (temp-file-session-factory)
-     :renderer        (saucer/renderer (conf [:renderer] {}))
-     :signer          (component/using
-                       (signer-component (conf [:signing :certificate-passwords] {}))
-                       [:keystore])
-     :app             (component/using
-                       (web/new-app)
-                       [:session-factory])
-     :web-options     (web/jetty-options keystore truststore config)
-     :web             (component/using
-                       (new-web-server 0)
-                       {:handler :app
-                        :options :web-options}))))
+     :keystore               keystore
+     :truststore             truststore
+     :session-factory        (temp-file-session-factory)
+     :renderer/flying-saucer (saucer/renderer (conf [:renderer] {}))
+     :renderer/fop           (fop/renderer (conf [:renderer-fop] {}))
+     :signer                 (component/using
+                              (signer-component
+                               (conf [:signing :certificate-passwords] {}))
+                              [:keystore])
+     :app                    (component/using
+                              (web/new-app)
+                              [:session-factory])
+     :web-options            (web/jetty-options keystore truststore config)
+     :web                    (component/using
+                              (new-web-server 0)
+                              {:handler :app
+                               :options :web-options}))))
 
 
 (def prod-system dev-system)

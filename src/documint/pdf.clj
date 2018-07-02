@@ -26,7 +26,8 @@
   "Render a PDF document from an HTML source document."
   [renderer options content]
   (log/info "Rendering a document"
-            {:options options})
+            {:renderer renderer
+             :options options})
   (fn [^OutputStream output]
     (log/spy
      (render renderer (:stream content) output options))

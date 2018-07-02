@@ -12,17 +12,20 @@
 
 (def ^:private config-schema
   ""
-  {:web-server   {(s/optional-key :port)     s/Int
-                  (s/optional-key :tls-port) s/Int
-                  (s/optional-key :tls-cert) s/Str}
-   :keystore     {:path     path-exists?
-                  :password s/Str}
+  {:web-server     {(s/optional-key :port)     s/Int
+                    (s/optional-key :tls-port) s/Int
+                    (s/optional-key :tls-cert) s/Str}
+   :keystore       {:path     path-exists?
+                    :password s/Str}
    (s/optional-key
-    :truststore) {:path     path-exists?
-                  :password s/Str}
-   :signing      {:certificate-passwords {s/Keyword s/Str}}
-   :renderer     {(s/optional-key :font-path) path-exists?
-                  (s/optional-key :logging?)  s/Bool}})
+    :truststore)   {:path     path-exists?
+                    :password s/Str}
+   :signing        {:certificate-passwords {s/Keyword s/Str}}
+   :renderer       {(s/optional-key :font-path) path-exists?
+                    (s/optional-key :logging?)  s/Bool}
+   (s/optional-key
+    :renderer-fop) {(s/optional-key :xconf) path-exists?}
+   })
 
 
 (defn- user-home
