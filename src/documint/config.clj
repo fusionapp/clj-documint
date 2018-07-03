@@ -24,7 +24,8 @@
    :renderer       {(s/optional-key :font-path) path-exists?
                     (s/optional-key :logging?)  s/Bool}
    (s/optional-key
-    :renderer-fop) {(s/optional-key :xconf) path-exists?}
+    :renderer-fop) {(s/optional-key :xconf)    path-exists?
+                    (s/optional-key :logging?) s/Bool}
    })
 
 
