@@ -7,6 +7,8 @@
             [documint.render :refer [IRenderer]])
   (:import [java.io InputStream OutputStream ByteArrayOutputStream]
            [java.net URI]
+           [java.util.logging Logger Level]
+           [org.apache.commons.logging LogFactory]
            [be.re.css CSSToXSLFO]
            [org.apache.fop.apps FopFactory MimeConstants]
            [javax.xml.transform TransformerFactory]
@@ -49,15 +51,29 @@
          (.transform transformer src (SAXResult. (.getDefaultHandler fop))))))))
 
 
+(defn- set-logging
+  "Enabled / disable Apache FOP logging."
+  [enabled?]
+  ;; For reasons I can't understand about Java logging, unless we call this
+  ;; Apache Commons Logging function first, setting the level on the JDK logger
+  ;; has no effect.
+  (LogFactory/getLog "org.apache.fop.apps.FOUserAgent")
+  (.. (Logger/getLogger "org.apache.fop.apps.FOUserAgent")
+      (setLevel (if enabled? Level/INFO Level/OFF))))
+
+
 (defn renderer
   "Construct an Apache FOP `IRenderer` implementation.
 
   Recognised options:
 
   `xconf`: Path string to an Apache FOP config file."
-  [{:keys [xconf] :as options}]
+  [{:keys [xconf
+           logging?]
+    :as options}]
   (log/info "Initialising Apache FOP renderer"
             {:options options})
+  (set-logging logging?)
   (let [fop-factory (FopFactory/newInstance (if xconf
                                               (jio/file xconf)
                                               default-base-uri))]
