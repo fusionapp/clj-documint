@@ -11,10 +11,10 @@ Parameters:
 Parameters:
   `input`: URI to a PDF document to be compressed.
   `compression-profile`: Compression profile to use, possible choices are
-  "text", "photo-grey", "photo". </pre></div><div class="src-link"><a href="https://github.com/fusionapp/clj-documint/blob/master/src/documint/actions/pdf.clj#L161">view source</a></div></div><div class="public anchor" id="var-metadata"><h3>metadata</h3><div class="usage"></div><div class="doc"><pre class="plaintext">Retrieve metadata from a PDF document.
+  "text", "photo-grey", "photo". </pre></div><div class="src-link"><a href="https://github.com/fusionapp/clj-documint/blob/master/src/documint/actions/pdf.clj#L177">view source</a></div></div><div class="public anchor" id="var-metadata"><h3>metadata</h3><div class="usage"></div><div class="doc"><pre class="plaintext">Retrieve metadata from a PDF document.
 
 Parameters:
-  `input`: URI to a PDF document.</pre></div><div class="src-link"><a href="https://github.com/fusionapp/clj-documint/blob/master/src/documint/actions/pdf.clj#L123">view source</a></div></div><div class="public anchor" id="var-render-html"><h3>render-html</h3><div class="usage"></div><div class="doc"><pre class="plaintext">Render an HTML document to a PDF document.
+  `input`: URI to a PDF document.</pre></div><div class="src-link"><a href="https://github.com/fusionapp/clj-documint/blob/master/src/documint/actions/pdf.clj#L139">view source</a></div></div><div class="public anchor" id="var-render-html"><h3>render-html</h3><div class="usage"></div><div class="doc"><pre class="plaintext">Render an HTML document to a PDF document.
 
 Parameters:
   `input`: URI to the HTML content to render.
@@ -28,17 +28,22 @@ Parameters:
   `inputs`: Vector of URIs to PDF documents to be digitally signed.
   `certificate-alias`: Alias of the certificate in the keystore to use for
   signing.
-  `reason`: PDF signature reason.</pre></div><div class="src-link"><a href="https://github.com/fusionapp/clj-documint/blob/master/src/documint/actions/pdf.clj#L139">view source</a></div></div><div class="public anchor" id="var-split"><h3>split</h3><div class="usage"></div><div class="doc"><pre class="plaintext">Split a PDF document into multiple documents.
+  `reason`: PDF signature reason.</pre></div><div class="src-link"><a href="https://github.com/fusionapp/clj-documint/blob/master/src/documint/actions/pdf.clj#L155">view source</a></div></div><div class="public anchor" id="var-split"><h3>split</h3><div class="usage"></div><div class="doc"><pre class="plaintext">Split a PDF document into multiple documents.
 
 Parameters:
   `input`: URI to a PDF document.
-  `page-groups`: A vector of vectors of page numbers, each top-level vector
-      represents a document containing only those pages from the original document,
-      in the order they are specified.</pre></div><div class="src-link"><a href="https://github.com/fusionapp/clj-documint/blob/master/src/documint/actions/pdf.clj#L102">view source</a></div></div><div class="public anchor" id="var-stamp"><h3>stamp</h3><div class="usage"></div><div class="doc"><pre class="plaintext">Stamp one or more documents with a watermark document.
+  `page-groups`: A vector of vectors, representing the output documents. Each
+      element should itself be a vector that contains any of the following to
+      represent the pages of the document:
+
+      - integer: 1-based page index;
+      - string: Page location such as "first" or "last";
+      - 2-vector: A start and end page reference (of either preceeding type),
+        representing an inclusive page span, which may also run backwards.</pre></div><div class="src-link"><a href="https://github.com/fusionapp/clj-documint/blob/master/src/documint/actions/pdf.clj#L113">view source</a></div></div><div class="public anchor" id="var-stamp"><h3>stamp</h3><div class="usage"></div><div class="doc"><pre class="plaintext">Stamp one or more documents with a watermark document.
 
 Parameters:
   `inputs`: URIs to PDF documents to be stamped.
-  `watermark`: URI to a PDF document to use as the stamp.</pre></div><div class="src-link"><a href="https://github.com/fusionapp/clj-documint/blob/master/src/documint/actions/pdf.clj#L182">view source</a></div></div><div class="public anchor" id="var-thumbnails"><h3>thumbnails</h3><div class="usage"></div><div class="doc"><pre class="plaintext">Generate JPEG thumbnails for a PDF document.
+  `watermark`: URI to a PDF document to use as the stamp.</pre></div><div class="src-link"><a href="https://github.com/fusionapp/clj-documint/blob/master/src/documint/actions/pdf.clj#L198">view source</a></div></div><div class="public anchor" id="var-thumbnails"><h3>thumbnails</h3><div class="usage"></div><div class="doc"><pre class="plaintext">Generate JPEG thumbnails for a PDF document.
 
 Parameters:
   `input`: URI to a PDF document.
