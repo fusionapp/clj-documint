@@ -99,18 +99,34 @@
                  {:links {:results contents}})))))
 
 
+(def ^:private page-name-flat
+  (s/conditional
+   integer? s/Int
+   string? (s/enum "first"
+                   "last")))
+
+(def ^:private page-name
+  (s/conditional
+   vector? [(s/one page-name-flat "start") (s/one page-name-flat "end")]
+   :else   page-name-flat))
+
 (def split
   "Split a PDF document into multiple documents.
 
   Parameters:
     `input`: URI to a PDF document.
-    `page-groups`: A vector of vectors of page numbers, each top-level vector
-        represents a document containing only those pages from the original document,
-        in the order they are specified."
+    `page-groups`: A vector of vectors, representing the output documents. Each
+        element should itself be a vector that contains any of the following to
+        represent the pages of the document:
+
+        - integer: 1-based page index;
+        - string: Page location such as \"first\" or \"last\";
+        - 2-vector: A start and end page reference (of either preceeding type),
+          representing an inclusive page span, which may also run backwards."
   (reify IAction
     (schema [this]
       {:input       uri?
-       :page-groups [[long]]})
+       :page-groups [[page-name]]})
 
     (perform [this session {:keys [input page-groups]}]
       (d/chain (fetch-content input)

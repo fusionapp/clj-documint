@@ -100,13 +100,40 @@
     (map #(partial write-thumb %) pages)))
 
 
-(defn- page-extractor
-  "Split a PDF document into several other documents consisting of specific
-  pages.
+(defn- translate-page-name
+  "Translate a page name (possibly an index) into a page index."
+  [^PDDocument doc page-name]
+  (if (number? page-name)
+    page-name
+    (condp = page-name
+      "first" 1
+      "last" (.getNumberOfPages doc))))
 
-  `page-indices` is a vector of page numbers, only those pages from the original
+
+(defn- expand-page-name
+  "Expand a page name into a vector of page indices."
+  [^PDDocument doc name]
+  (let [xlate (partial translate-page-name doc)]
+    (if (vector? name)
+      (let [[a b] (map xlate name)]
+        (vec
+         (if (> a b)
+           (range a (dec b) -1)
+           (range a (inc b)))))
+      [(xlate name)])))
+
+
+(defn- page-extractor
+  "Extract specific pages from a PDF source document into a new PDF document.
+
+  `page-indices` is a vector of page names, only those pages from the original
   document will be contained in the resulting document, in the order they are
-  specified."
+  specified.
+
+  A page name may be an index (integer), a name (string) such as 'first', 'last',
+  etc., or a vector of exactly two elements of the previous types. In the case
+  of a vector the first element is the start of the span, the second is the end
+  of the span. Spans may run backwards. "
   [^PDDocument src-doc page-indices]
   (let [dst-doc (PDDocument.)]
     (doto dst-doc
@@ -116,7 +143,7 @@
            (.. src-doc
                getDocumentCatalog
                getViewerPreferences))))
-    (doseq [page-index page-indices]
+    (doseq [page-index (mapcat #(expand-page-name src-doc %) page-indices)]
       (let [^PDPage page (.getPage src-doc (dec page-index))
             imported     (.importPage dst-doc page)]
         (doto imported
