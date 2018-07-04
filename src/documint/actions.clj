@@ -16,7 +16,7 @@
 (def ^:private known-actions
   {"render-html"        pdf-actions/render-html
    "render-legacy-html" pdf-actions/render-legacy-html
-   "concat"             pdf-actions/concatenate
+   "concatenate"        pdf-actions/concatenate
    "thumbnails"         pdf-actions/thumbnails
    "split"              pdf-actions/split
    "metadata"           pdf-actions/metadata
