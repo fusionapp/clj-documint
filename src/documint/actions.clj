@@ -72,7 +72,7 @@
              (if (= (:type data) :schema.core/error)
                (ex-info "Schema validation failure"
                         {:causes [[:validation-failure
-                                   (select-keys data [:error])]]})
+                                   {:error (prn-str (:error data))}]]})
                e))))))
     (throw (ex-info "Unknown action"
                     {:causes [[:unknown-action action-name]]}))))
