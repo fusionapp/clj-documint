@@ -19,15 +19,15 @@ pipeline:
         - pull_request
         - tag
   lein:
-    image: idnar/lein
+    image: clojure:lein
     pull: true
     commands:
       - mkdir -p m2
       # Avoid `with-profile` because of bad behaviour in `lein-localrepo`:
       # https://github.com/kumarshantanu/lein-localrepo/issues/13
-      - /usr/local/bin/lein localrepo install --repo m2 resources/css2xslfo1_6_2.jar com.fusionapp/css2xslfo 1.6.2
-      - /usr/local/bin/lein with-profile +drone uberjar
-      - /usr/local/bin/lein with-profile +drone codox
+      - lein localrepo install --repo m2 resources/css2xslfo1_6_2.jar com.fusionapp/css2xslfo 1.6.2
+      - lein with-profile +drone uberjar
+      - lein with-profile +drone codox
     when:
       event:
         - push
@@ -91,7 +91,7 @@ pipeline:
     docker_image: 801493518741.dkr.ecr.eu-west-1.amazonaws.com/clj-documint:git-${DRONE_COMMIT_SHA}
     start_first: false
     confirm: true
-    timeout: 240
+    timeout: 480
     when:
       event: push
       branch: master
@@ -107,7 +107,7 @@ pipeline:
     docker_image: 801493518741.dkr.ecr.eu-west-1.amazonaws.com/clj-documint:git-${DRONE_COMMIT_SHA}
     start_first: false
     confirm: true
-    timeout: 240
+    timeout: 480
     when:
       event: deployment
       environment: production
