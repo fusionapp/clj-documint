@@ -14,6 +14,8 @@
            [org.apache.pdfbox.pdmodel PDDocument PDPage]
            [org.apache.pdfbox.multipdf PDFMergerUtility]))
 
+(set! *warn-on-reflection* true)
+
 
 (defn- ^PDDocument content->doc
   ""
@@ -191,7 +193,7 @@
   [signer certificate-alias location reason contents]
   (log/info "Signing documents"
             {:certificate-alias certificate-alias})
-  (let [sign-doc (fn [content output]
+  (let [sign-doc (fn [content ^OutputStream output]
                    (with-open [doc (content->doc content)]
                      (signing/sign-document signer
                                             doc
@@ -219,7 +221,7 @@
   "Stamp documents with a watermark document."
   [watermark contents]
   (log/info "Stamping documents")
-  (letfn [(watermark-doc [content output]
+  (letfn [(watermark-doc [content ^OutputStream output]
             (with-open [src-doc (doto (content->doc content)
                                   ;; Strip security from the source so we can
                                   ;; modify the document.

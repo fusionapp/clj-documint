@@ -15,8 +15,10 @@
            [org.apache.pdfbox.util Matrix]
            [java.awt.geom AffineTransform]))
 
+(set! *warn-on-reflection* true)
 
-(defn- page-cropbox [page]
+
+(defn- page-cropbox [^PDPage page]
   (let [box (.getCropBox page)]
     [(.getWidth box) (.getHeight box)]))
 
@@ -27,12 +29,12 @@
     [w h]))
 
 
-(defn- landscape? [page]
+(defn- landscape? [^PDPage page]
   (let [[w h] (page-cropbox page)]
     (> w h)))
 
 
-(defn- transformation [align src dst]
+(defn- ^AffineTransform transformation [align ^PDPage src ^PDPage dst]
   (let [transform (AffineTransform.)
         rot       (.getRotation dst)
         [dw dh]   (portrait-orientation (page-cropbox dst))
@@ -58,7 +60,7 @@
 
   In some cases this object can exist in the document but be corrupt (e.g. the
   content properties is an object instead of a dictionary etc.)"
-  [document layer-name]
+  [^PDDocument document ^String layer-name]
   (let [ocprops-empty (PDOptionalContentProperties.)
         ocprops       (or (.. document (getDocumentCatalog) (getOCProperties))
                           ocprops-empty)
@@ -77,7 +79,9 @@
    ^PDPage page
    ^AffineTransform transform
    ^String layer-name]
-  (let [[ocprops layer] (safe-content-properties document layer-name)]
+  (let [[^PDOptionalContentProperties ocprops
+         ^PDOptionalContentGroup      layer]
+        (safe-content-properties document layer-name)]
     (when-not (.hasGroup ocprops layer-name)
       (.addGroup ocprops layer))
 
