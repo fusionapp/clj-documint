@@ -91,7 +91,7 @@ pipeline:
     docker_image: 801493518741.dkr.ecr.eu-west-1.amazonaws.com/clj-documint:git-${DRONE_COMMIT_SHA}
     start_first: false
     confirm: true
-    timeout: 240
+    timeout: 480
     when:
       event: push
       branch: master
@@ -107,7 +107,7 @@ pipeline:
     docker_image: 801493518741.dkr.ecr.eu-west-1.amazonaws.com/clj-documint:git-${DRONE_COMMIT_SHA}
     start_first: false
     confirm: true
-    timeout: 240
+    timeout: 480
     when:
       event: deployment
       environment: production
