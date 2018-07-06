@@ -137,20 +137,17 @@
   [^PDDocument src-doc page-indices]
   (let [dst-doc (PDDocument.)]
     (doto dst-doc
-      (.setDocumentInformation (.getDocumentInformation src-doc))
-      (.. getDocumentCatalog
-          (setViewerPreferences
-           (.. src-doc
-               getDocumentCatalog
-               getViewerPreferences))))
+      ;; We forego copying `PDViewerPreferences` since we're tearing pages out,
+      ;; whatever viewer preferences were relevant for the whole document are
+      ;; unlikely to be relevant now.
+      (.setDocumentInformation (.getDocumentInformation src-doc)))
     (doseq [page-index (mapcat #(expand-page-name src-doc %) page-indices)]
       (let [^PDPage page (.getPage src-doc (dec page-index))
             imported     (.importPage dst-doc page)]
+        ;; Media information is copied by `PDPage.importPage`:
+        ;; https://github.com/apache/pdfbox/blob/2.0.11/pdfbox/src/main/java/org/apache/pdfbox/pdmodel/PDDocument.java#L678
         (doto imported
-          (.setCropBox (.getCropBox page))
-          (.setMediaBox (.getMediaBox page))
-          (.setResources (.getResources page))
-          (.setRotation (.getRotation page)))))
+          (.setResources (.getResources page)))))
     dst-doc))
 
 
