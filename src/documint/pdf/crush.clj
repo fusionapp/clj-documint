@@ -38,9 +38,9 @@
 (defn- ^InputStream jpeg-stream
   "Open an `InputStream` for a JPEG `PDImageXObject`."
   [^PDImageXObject x-img]
-  (.createInputStream (.getStream x-img)
-                      [(.getName COSName/DCT_DECODE)
-                       (.getName COSName/DCT_DECODE_ABBREVIATION)]))
+  (let [^java.util.List filters [(.getName COSName/DCT_DECODE)
+                                 (.getName COSName/DCT_DECODE_ABBREVIATION)]]
+    (.createInputStream (.getStream x-img) filters)))
 
 
 (defn- estimate-image-quality

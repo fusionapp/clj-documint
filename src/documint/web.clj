@@ -118,7 +118,7 @@
   ([type reason description]
    {:type        type
     :reason      (if (instance? Exception reason)
-                   (.toString reason)
+                   (.toString ^Exception reason)
                    reason)
     :description description}))
 
