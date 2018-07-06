@@ -1,3 +1,5 @@
+(set! *warn-on-reflection* true)
+
 (set-env!
  :source-paths #{"src"}
  :resource-paths #{"src"}
@@ -18,7 +20,7 @@
                  [compojure "1.6.0"]
                  [environ "1.1.0"]
                  [manifold "0.1.6"]
-                 [org.apache.pdfbox/pdfbox "2.0.9"]
+                 [org.apache.pdfbox/pdfbox "2.0.11"]
                  [org.bouncycastle/bcpkix-jdk15on "1.58"]
                  [org.bouncycastle/bcprov-jdk15on "1.58"]
                  [prismatic/schema "1.1.7"]

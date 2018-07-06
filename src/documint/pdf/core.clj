@@ -66,7 +66,7 @@
                  :length    (x-object-length x-obj)
                  :info      (x-object-info page x-obj)}]
                (when (instance? PDFormXObject x-obj)
-                 (x-objects page (.getResources x-obj) pred)))))
+                 (x-objects page (.getResources ^PDFormXObject x-obj) pred)))))
     (.getXObjectNames resources))))
 
 

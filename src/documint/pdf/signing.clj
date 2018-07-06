@@ -28,7 +28,6 @@
             SignatureInterface]))
 
 
-
 (defrecord CMSProcessableInputStream [^ASN1ObjectIdentifier content-type
                                       ^java.io.InputStream input-stream]
   CMSTypedData
@@ -51,7 +50,7 @@
    input-stream))
 
 
-(defn- bouncy-castle-signature-interface
+(defn- ^SignatureInterface bouncy-castle-signature-interface
   "Construct an instance of a `SignatureInterface` implementation using Bouncy
   Castle."
   [certificate-chain private-key]
@@ -59,7 +58,7 @@
         gen    (CMSSignedDataGenerator.)
         cert   (Certificate/getInstance
                 (ASN1Primitive/fromByteArray
-                 (.getEncoded ^java.security.Certificate (first certificate-chain))))
+                 (.getEncoded ^java.security.cert.Certificate (first certificate-chain))))
         signer (.. (JcaContentSignerBuilder. "SHA256withRSA")
                    (build private-key))]
     (doto gen
@@ -91,7 +90,7 @@
                             keystore]
   ISigner
   (sign-document [this document certificate-alias location reason output]
-    (if-let [sig-iface (sig-ifaces certificate-alias)]
+    (if-let [^SignatureInterface sig-iface (sig-ifaces certificate-alias)]
       (let [signature (PDSignature.)]
         (doto signature
           (.setFilter PDSignature/FILTER_ADOBE_PPKLITE)
