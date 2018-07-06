@@ -80,9 +80,7 @@ pipeline:
       - git-${DRONE_COMMIT_SHA}
     when:
       event: push
-      branch:
-        - 'master'
-        - '110-upgrade-runtime'
+      branch: master
     secrets:
       - ecr_access_key
       - ecr_secret_key
@@ -96,9 +94,7 @@ pipeline:
     timeout: 600
     when:
       event: push
-      branch:
-        - 'master'
-        - '110-upgrade-runtime'
+      branch: master
     secrets:
       - source: rancher_nonprod_access_key
         target: rancher_access_key
@@ -143,4 +139,3 @@ branches:
   - master
   - staging
   - trying
-  - '110-upgrade-runtime'
