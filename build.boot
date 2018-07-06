@@ -1,3 +1,5 @@
+(set! *warn-on-reflection* true)
+
 (set-env!
  :source-paths #{"src"}
  :resource-paths #{"src"}

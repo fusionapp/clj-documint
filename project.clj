@@ -42,7 +42,6 @@
   :target-path "target/%s"
   :codox {:source-uri  "https://github.com/fusionapp/clj-documint/blob/master/{filepath}#L{line}"
           :output-path "target/codox"}
-  :global-vars  {*warn-on-reflection* true}
   :profiles {:dev     {:source-paths ["dev"]}
              :uberjar {:aot :all}
              :drone   {:local-repo "m2"}})

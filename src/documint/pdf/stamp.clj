@@ -15,8 +15,6 @@
            [org.apache.pdfbox.util Matrix]
            [java.awt.geom AffineTransform]))
 
-(set! *warn-on-reflection* true)
-
 
 (defn- page-cropbox [^PDPage page]
   (let [box (.getCropBox page)]

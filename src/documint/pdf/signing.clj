@@ -27,8 +27,6 @@
             PDSignature
             SignatureInterface]))
 
-(set! *warn-on-reflection* true)
-
 
 (defrecord CMSProcessableInputStream [^ASN1ObjectIdentifier content-type
                                       ^java.io.InputStream input-stream]

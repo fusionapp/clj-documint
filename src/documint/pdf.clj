@@ -14,8 +14,6 @@
            [org.apache.pdfbox.pdmodel PDDocument PDPage]
            [org.apache.pdfbox.multipdf PDFMergerUtility]))
 
-(set! *warn-on-reflection* true)
-
 
 (defn- ^PDDocument content->doc
   ""
