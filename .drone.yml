@@ -8,7 +8,7 @@ pipeline:
     endpoint: https://s3.amazonaws.com
     accelerateEndpoint: s3-accelerate.amazonaws.com
     region: eu-west-1
-    root: /drone-cache-fusionapp-useast
+    root: /drone-cache-fusionapp
     restore: true
     mount:
       - m2
