@@ -80,19 +80,24 @@
 
   (realize-thunk [this]
     (log/info "Realizing thunk content")
-    (store-fn
-     (piped-input-stream
-      (fn [output]
-        (try
-          (let [content-type (thunk output)]
-            (log/info "Successfully realized thunk"
-                      {:content-type content-type})
-            (d/success! deferred-result
-                        {:content-type content-type
-                         :stored       file}))
-          (catch Exception e
-            (log/error e "Failed realizing thunk")
-            (d/error! deferred-result e))))))
+    ;; Wait for `store-fn` to complete before signalling the deferred.
+    (let [result (promise)]
+      (store-fn
+       (piped-input-stream
+        (fn [output]
+          (try
+            (deliver result {:content-type (thunk output)
+                             :stored       file})
+            (catch Throwable e
+              (deliver result e))))))
+      (if (instance? Throwable @result)
+        (do
+          (log/error @result "Failed realizing thunk")
+          (d/error! deferred-result @result))
+        (do
+          (log/info "Successfully realized thunk"
+                    {:content-type (:content-type @result)})
+          (d/success! deferred-result @result))))
     this))
 
 

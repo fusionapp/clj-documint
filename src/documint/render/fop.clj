@@ -5,12 +5,14 @@
   (:require [clojure.tools.logging :as log]
             [clojure.java.io :as jio]
             [documint.render :refer [IRenderer]])
-  (:import [java.io InputStream OutputStream ByteArrayOutputStream]
+  (:import [java.io
+            InputStream OutputStream ByteArrayOutputStream ByteArrayInputStream]
            [java.net URI]
            [java.util.logging Logger Level]
            [org.apache.commons.logging LogFactory]
            [be.re.css CSSToXSLFO]
-           [org.apache.fop.apps FopFactory MimeConstants]
+           [org.apache.fop.apps
+            FopFactory MimeConstants]
            [javax.xml.transform TransformerFactory]
            [javax.xml.transform.stream StreamSource]
            [javax.xml.transform.sax SAXResult]))
@@ -23,32 +25,31 @@
   IRenderer
   (render [this input output
            {:keys [base-uri] :as options}]
-    (let [^InputStream input   input
-          ^OutputStream output output
-          output-fo            (ByteArrayOutputStream.)
-          ^URI base-uri        (if (clojure.string/blank? base-uri)
-                                 default-base-uri
-                                 (URI. base-uri))]
-      (log/info "Transforming HTML to XSL-FO with css2xslfo"
-                {:base-uri base-uri})
-      (log/spy
-       (CSSToXSLFO/convert
-        input
-        output-fo
-        (.toURL base-uri)
-        nil
-        (.getResource CSSToXSLFO "/catalog")
-        {"base-url" (.toString base-uri)}
-        nil
-        false
-        false))
-      (log/info "Rendering a document with Apache FOP"
-                {:base-uri base-uri})
-      (let [fop         (.newFop fop-factory MimeConstants/MIME_PDF output)
-            transformer (.newTransformer (TransformerFactory/newInstance))
-            src         (StreamSource. (jio/input-stream (.toByteArray output-fo)))]
-        (log/spy
-         (.transform transformer src (SAXResult. (.getDefaultHandler fop))))))))
+    (with-open [output-fo (ByteArrayOutputStream.)]
+      (let [^InputStream input   input
+            ^OutputStream output output
+            ^URI base-uri        (if (clojure.string/blank? base-uri)
+                                   default-base-uri
+                                   (URI. base-uri))]
+        (log/info "Transforming HTML to XSL-FO with css2xslfo"
+                  {:base-uri base-uri})
+        (CSSToXSLFO/convert
+         input
+         output-fo
+         (.toURL base-uri)
+         nil
+         (.getResource CSSToXSLFO "/catalog")
+         {"base-url" (.toString base-uri)}
+         nil
+         false
+         false)
+        (log/info "Rendering a document with Apache FOP"
+                  {:base-uri base-uri})
+        (with-open [input-fo (ByteArrayInputStream. (.toByteArray output-fo))]
+          (let [fop         (.newFop fop-factory MimeConstants/MIME_PDF output)
+                transformer (.newTransformer (TransformerFactory/newInstance))
+                src         (StreamSource. input-fo)]
+            (.transform transformer src (SAXResult. (.getDefaultHandler fop)))))))))
 
 
 (defn- set-logging
