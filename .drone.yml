@@ -6,7 +6,7 @@ pipeline:
     image: plugins/s3-cache
     pull: true
     endpoint: https://s3.amazonaws.com
-    # accelerateEndpoint: s3-accelerate.amazonaws.com
+    accelerateEndpoint: s3-accelerate.amazonaws.com
     region: eu-west-1
     root: /drone-cache-fusionapp
     restore: true
