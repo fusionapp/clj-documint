@@ -5,7 +5,8 @@ pipeline:
   restore_cache:
     image: plugins/s3-cache
     pull: true
-    endpoint: https://s3.us-east-1.amazonaws.com
+    endpoint: https://s3.amazonaws.com
+    region: ''
     root: /drone-cache-fusionapp-useast
     restore: true
     mount:
