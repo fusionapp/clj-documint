@@ -9,12 +9,12 @@ pipeline:
     accelerateEndpoint: s3-accelerate.amazonaws.com
     region: ''
     root: /drone-cache-fusionapp
-    restore: true
     mount:
       - m2
     secrets:
       - aws_access_key_id
       - aws_secret_access_key
+    restore: true
     when:
       event:
         - push
@@ -39,13 +39,15 @@ pipeline:
     image: plugins/s3-cache
     pull: true
     endpoint: https://s3.amazonaws.com
-    root: /drone-cache-fusionapp-useast
-    rebuild: true
+    accelerateEndpoint: s3-accelerate.amazonaws.com
+    region: ''
+    root: /drone-cache-fusionapp
     mount:
       - m2
     secrets:
       - aws_access_key_id
       - aws_secret_access_key
+    rebuild: true
     when:
       event: push
       branch:
@@ -54,11 +56,15 @@ pipeline:
     image: plugins/s3-cache
     pull: true
     endpoint: https://s3.amazonaws.com
-    root: /drone-cache-fusionapp-useast
-    flush: true
+    accelerateEndpoint: s3-accelerate.amazonaws.com
+    region: ''
+    root: /drone-cache-fusionapp
+    mount:
+      - m2
     secrets:
       - aws_access_key_id
       - aws_secret_access_key
+    flush: true
     when:
       event: push
       branch:
