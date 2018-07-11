@@ -9,7 +9,7 @@
 
 The result is a deferred map containing `:stream` and `:content-type` keys,
 or the response is `nil` if no such content identifier exists.</pre></div></div><div class="public anchor" id="var-put-content"><h3>put-content</h3><div class="usage"><code>(put-content this session-id content-type readable)</code></div><div class="doc"><pre class="plaintext">Allocate and realize a content entry.
-</pre></div></div></div></div><div class="src-link"><a href="https://github.com/fusionapp/clj-documint/blob/master/src/documint/content.clj#L99">view source</a></div></div><div class="public anchor" id="var-IStorageEntry"><h3>IStorageEntry</h3><h4 class="type">protocol</h4><div class="usage"></div><div class="doc"><pre class="plaintext">
+</pre></div></div></div></div><div class="src-link"><a href="https://github.com/fusionapp/clj-documint/blob/master/src/documint/content.clj#L104">view source</a></div></div><div class="public anchor" id="var-IStorageEntry"><h3>IStorageEntry</h3><h4 class="type">protocol</h4><div class="usage"></div><div class="doc"><pre class="plaintext">
 </pre></div><div class="members"><h4>members</h4><div class="inner"><div class="public anchor" id="var-content-id"><h3>content-id</h3><div class="usage"><code>(content-id this)</code></div><div class="doc"><pre class="plaintext">Identifier for this content.
 </pre></div></div><div class="public anchor" id="var-entry-content"><h3>entry-content</h3><div class="usage"><code>(entry-content this)</code></div><div class="doc"><pre class="plaintext">Fetch the content for this entry.
 
@@ -17,4 +17,4 @@ The result is a deferred map containing `:stream` and `:content-type` keys,
 or the response is `nil` if no such content identifier exists.</pre></div></div><div class="public anchor" id="var-realize-thunk"><h3>realize-thunk</h3><div class="usage"><code>(realize-thunk this)</code></div><div class="doc"><pre class="plaintext">Realize the entry's thunk.
 </pre></div></div><div class="public anchor" id="var-session-id"><h3>session-id</h3><div class="usage"><code>(session-id this)</code></div><div class="doc"><pre class="plaintext">Session identifier for this content.
 </pre></div></div></div></div><div class="src-link"><a href="https://github.com/fusionapp/clj-documint/blob/master/src/documint/content.clj#L44">view source</a></div></div><div class="public anchor" id="var-temp-file-storage"><h3>temp-file-storage</h3><div class="usage"><code>(temp-file-storage next-id)</code><code>(temp-file-storage next-id parent)</code></div><div class="doc"><pre class="plaintext">An `IStorage` implementation backed by temporary files.
-</pre></div><div class="src-link"><a href="https://github.com/fusionapp/clj-documint/blob/master/src/documint/content.clj#L157">view source</a></div></div></div></body></html>
+</pre></div><div class="src-link"><a href="https://github.com/fusionapp/clj-documint/blob/master/src/documint/content.clj#L162">view source</a></div></div></div></body></html>
