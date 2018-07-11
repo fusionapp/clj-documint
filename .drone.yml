@@ -1,20 +1,22 @@
+cache: &cache_settings
+  image: plugins/s3-cache
+  pull: true
+  endpoint: https://s3.amazonaws.com
+  accelerateEndpoint: s3-accelerate.amazonaws.com
+  region: ''
+  root: /drone-cache-fusionapp
+  mount:
+    - m2
+  secrets:
+    - aws_access_key_id
+    - aws_secret_access_key
 workspace:
   base: /drone
   path: src/github.com/fusionapp/clj-documint
 pipeline:
   restore_cache:
-    image: plugins/s3-cache
-    pull: true
-    endpoint: https://s3.amazonaws.com
-    accelerateEndpoint: s3-accelerate.amazonaws.com
-    region: ''
-    root: /drone-cache-fusionapp
+    <<: *cache_settings
     restore: true
-    mount:
-      - m2
-    secrets:
-      - aws_access_key_id
-      - aws_secret_access_key
     when:
       event:
         - push
@@ -36,29 +38,15 @@ pipeline:
         - pull_request
         - tag
   rebuild_cache:
-    image: plugins/s3-cache
-    pull: true
-    endpoint: https://s3.amazonaws.com
-    root: /drone-cache-fusionapp-useast
+    <<: *cache_settings
     rebuild: true
-    mount:
-      - m2
-    secrets:
-      - aws_access_key_id
-      - aws_secret_access_key
     when:
       event: push
       branch:
         - master
   flush_cache:
-    image: plugins/s3-cache
-    pull: true
-    endpoint: https://s3.amazonaws.com
-    root: /drone-cache-fusionapp-useast
+    <<: *cache_settings
     flush: true
-    secrets:
-      - aws_access_key_id
-      - aws_secret_access_key
     when:
       event: push
       branch:
