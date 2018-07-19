@@ -36,12 +36,6 @@
               :content-type (get-in response [:headers :content-type])})))
 
 
-(defn fetch-multiple-contents
-  "Fetch the contents of multiple URIs. See `fetch-content`."
-  [uris]
-  (apply d/zip (map fetch-content uris)))
-
-
 (defn wait-close
   "Close `closeable` when the items being waited on have all been done.
 
@@ -121,3 +115,13 @@
                          (apply f val args))
                        args)]
     [@m new-val]))
+
+
+(defn counter
+  "An identity generator that uses ever increasing numbers.
+
+  Use in place of UUIDs when testing."
+  [n]
+  (let [counter (atom n)]
+    (fn []
+      (str (swap! counter inc)))))
