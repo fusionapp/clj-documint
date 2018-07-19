@@ -1,48 +1,10 @@
 (ns documint.web
-  "Documint web service.
-
-  The API is REST-JSON with the following structure:
-
-  POST   /sessions
-    Create a new session.
-
-    Contains hrefs for:
-        * Performing an action;
-        * Creating new session content;
-        * Referencing itself.
-
-
-  POST   /<session_uri>/perform
-    Perform an action within a session. Action inputs and outputs are specific to
-    each action being performed. Inputs and outputs are specified as URIs.
-
-    {\"action\": \"some_action\",
-     \"parameters\": { ... some parameters ... }}
-
-    Contains hrefs for:
-        * The contents of outputs (of which there may be more than one).
-
-
-  POST   /<session_uri>/contents/
-    Create new session content.
-
-    Contains hrefs for:
-        * Referencing itself.
-
-
-  GET    /<session_uri>/contents/<content_id>
-    Fetch the content of an output.
-
-
-  DELETE /<session_uri>
-    Remove a session and all its contents.
-
-
-  GET /metrics
-    Retrieve Prometheus metrics. "
+  "Documint web service."
+  (:refer-clojure :exclude [if-let when-let])
   (:require [clojure.data.json :as json]
             [clojure.tools.logging :as log]
             [com.stuartsierra.component :as component]
+            [better-cond.core :refer [if-let when-let]]
             [liberator.core :refer [defresource]]
             [liberator.dev :refer [wrap-trace]]
             [bidi.bidi :as bidi]
@@ -53,7 +15,7 @@
             [documint.content :as content]
             [documint.session :as session]
             [documint.actions :refer [perform-action]]
-            [documint.util :refer [transform-map]]
+            [documint.util :refer [transform-map fetch-content]]
             [documint.metrics :refer [registry]])
   (:import [org.eclipse.jetty.server SslConnectionFactory]))
 
@@ -147,6 +109,62 @@
               path
               nil
               nil)))
+
+
+(defn local-uri?
+  "Return the URI path if the URI is local to this instance."
+  [{req :request}]
+  (fn [uri]
+    (let [uri    (java.net.URI. uri)
+          scheme (.getScheme uri)
+          host   (.getHost uri)
+          port   (.getPort uri)]
+      (when (and (= (name (:scheme req)) scheme)
+                 (= (:server-name req) host)
+                 (= (:server-port req) (if (neg? port)
+                                         ({"http"  80
+                                           "https" 443} scheme)
+                                         port)))
+        (.getPath uri)))))
+
+
+(defn near-location
+  "Find the coordinates for the near location, in the form of
+  `[session-id content-id]`, if possible."
+  [path]
+  (when-let [path       path
+             m          (bidi/match-route routes path)
+             ps         (when (= ::content-resource (:handler m))
+                          (:route-params m))
+             session-id (::session-id ps)
+             content-id (::content-id ps)]
+    [session-id content-id]))
+
+
+(defn local-fetcher
+  "Create a function to retrieve local content that does not use HTTP."
+  [session-factory]
+  (fn fetch-local [[sid cid]]
+    (when-let [session (session/get-session session-factory sid)
+               content (session/get-content session cid)]
+      content)))
+
+
+(defn content-getter
+  "Create a function to retrieve session content.
+
+  Accepts single or multiple URIs to fetch, `fetch-near` is tried when `near?`
+  indicates a URI is near to this instance, falling back to `fetch-far`."
+  [near? fetch-near fetch-far]
+  (letfn [(get-one [uri]
+            (if-let [loc     (near-location (near? uri))
+                     content (fetch-near loc)]
+              content
+              (fetch-far uri)))]
+    (fn get-content [uri]
+      (if (sequential? uri)
+        (apply d/zip (map get-one uri))
+        (get-one uri)))))
 
 
 (defn- session-uri
@@ -276,13 +294,17 @@
         {:keys [action
                 parameters]} ::data
         :as                  ctx}]
-    (let [make-uri (partial content-uri ctx)
-          outputs  (perform-action action parameters session)
-          d        (d/chain outputs
-                            #(transform-response make-uri %)
-                            #(assoc {} ::response %))
-          ; We deref here because Liberator doesn't really do async.
-          response (deref d 30000 ::no-response)]
+    (let [get-content (content-getter
+                       (local-uri? ctx)
+                       (local-fetcher session-factory)
+                       fetch-content)
+          make-uri    (partial content-uri ctx)
+          outputs     (perform-action action parameters session get-content)
+          d           (d/chain outputs
+                               #(transform-response make-uri %)
+                               #(assoc {} ::response %))
+          ;; We deref here because Liberator doesn't really do async.
+          response    (deref d 30000 ::no-response)]
       (if (= ::no-response response)
         (throw (ex-info "Performing an action timed out"
                         {:causes [[:perform-timed-out action]]}))

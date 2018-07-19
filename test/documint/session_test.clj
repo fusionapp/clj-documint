@@ -1,19 +1,10 @@
 (ns documint.session-test
   "Tests for `documint.session`."
   (:require [documint.session :as session]
+            [documint.util :refer [counter]]
             [manifold.deferred :as d]
             [manifold.time :refer [mock-clock with-clock minutes advance]]
             [clojure.test :refer [deftest testing is]]))
-
-
-(defn counter
-  "An identity generator that uses ever increasing numbers.
-
-  Use in place of UUIDs when testing."
-  [n]
-  (let [counter (atom n)]
-    (fn []
-      (str (swap! counter inc)))))
 
 
 (deftest temp-file-session-factory

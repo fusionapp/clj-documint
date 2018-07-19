@@ -8,8 +8,7 @@
             [documint.session :as session]
             [documint.pdf :as pdf]
             [documint.actions.interfaces :refer [IAction]]
-            [documint.schema :refer [uri?]]
-            [documint.util :refer [fetch-content fetch-multiple-contents]]))
+            [documint.schema :refer [uri?]]))
 
 
 (defn allocate-thunks
@@ -29,8 +28,8 @@
       {:input                     uri?
        (s/optional-key :base-uri) uri?})
 
-    (perform [this session {:keys [input base-uri]}]
-      (d/chain (fetch-content input)
+    (perform [this get-content session {:keys [input base-uri]}]
+      (d/chain (get-content input)
                (partial pdf/render-html
                         (:renderer/flying-saucer system)
                         {:base-uri base-uri})
@@ -51,8 +50,8 @@
       {:input                     uri?
        (s/optional-key :base-uri) uri?})
 
-    (perform [this session {:keys [input base-uri]}]
-      (d/chain (fetch-content input)
+    (perform [this get-content session {:keys [input base-uri]}]
+      (d/chain (get-content input)
                (partial pdf/render-html
                         (:renderer/fop system)
                         {:base-uri base-uri})
@@ -71,8 +70,8 @@
     (schema [this]
       {:inputs [uri?]})
 
-    (perform [this session {:keys [inputs]}]
-      (d/chain (fetch-multiple-contents inputs)
+    (perform [this get-content session {:keys [inputs]}]
+      (d/chain (get-content inputs)
                pdf/concatenate
                vector
                (partial allocate-thunks session)
@@ -91,8 +90,8 @@
       {:input uri?
        :dpi   long})
 
-    (perform [this session {:keys [input dpi]}]
-      (d/chain (fetch-content input)
+    (perform [this get-content session {:keys [input dpi]}]
+      (d/chain (get-content input)
                (partial pdf/thumbnails dpi)
                (partial allocate-thunks session)
                (fn [contents]
@@ -128,8 +127,8 @@
       {:input       uri?
        :page-groups [[page-name]]})
 
-    (perform [this session {:keys [input page-groups]}]
-      (d/chain (fetch-content input)
+    (perform [this get-content session {:keys [input page-groups]}]
+      (d/chain (get-content input)
                (partial pdf/split page-groups)
                (partial allocate-thunks session)
                (fn [contents]
@@ -145,8 +144,8 @@
     (schema [this]
       {:input uri?})
 
-    (perform [this session {:keys [input]}]
-      (d/chain (fetch-content input)
+    (perform [this get-content session {:keys [input]}]
+      (d/chain (get-content input)
                pdf/metadata
                (fn [body]
                  {:body body})))))
@@ -166,8 +165,8 @@
        :certificate-alias s/Str
        :location          s/Str
        :reason            s/Str})
-    (perform [this session {:keys [inputs certificate-alias location reason]}]
-      (d/chain (fetch-multiple-contents inputs)
+    (perform [this get-content session {:keys [inputs certificate-alias location reason]}]
+      (d/chain (get-content inputs)
                (partial pdf/sign (:signer system) certificate-alias location reason)
                (partial allocate-thunks session)
                (fn [contents]
@@ -186,8 +185,8 @@
       {:input               uri?
        :compression-profile (s/enum "text" "photo-grey" "photo")})
 
-    (perform [this session {:keys [input compression-profile]}]
-      (d/chain (fetch-content input)
+    (perform [this get-content session {:keys [input compression-profile]}]
+      (d/chain (get-content input)
                (partial pdf/crush (keyword compression-profile))
                vector
                (partial allocate-thunks session)
@@ -205,8 +204,8 @@
     (schema [this]
       {:inputs            [uri?]
        :watermark         uri?})
-    (perform [this session {:keys [inputs watermark]}]
-      (d/chain (fetch-multiple-contents (cons watermark inputs))
+    (perform [this get-content session {:keys [inputs watermark]}]
+      (d/chain (get-content (cons watermark inputs))
                (fn [[watermark & inputs]]
                  (pdf/stamp watermark inputs))
                (partial allocate-thunks session)

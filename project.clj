@@ -31,6 +31,7 @@
                  [io.prometheus/simpleclient_hotspot "0.4.0"]
                  [org.apache.xmlgraphics/fop "2.3"]
                  [com.fusionapp/css2xslfo "1.6.2"]
+                 [better-cond "1.0.1"]
                  ]
   :plugins [[lein-environ "1.0.0"]
             [lein-cloverage "1.0.7-SNAPSHOT"]

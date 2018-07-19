@@ -50,13 +50,16 @@
 
 (defn perform-action
   "Perform an `IAction` by name."
-  [action-name parameters session]
+  [action-name parameters session get-content]
   (if-let [action (get known-actions action-name)]
     (prometheus/with-failure-counter
       (registry :documint/actions-errored-total {:action action-name})
       (try
         (->
-         (d/chain (perform action session (s/validate (schema action) parameters))
+         (d/chain (perform action
+                           get-content
+                           session
+                           (s/validate (schema action) parameters))
                   (partial realize-response pool))
          (metrics/async-duration
           (registry :documint/actions-seconds {:action action-name}))

@@ -7,7 +7,7 @@
   (schema [this]
     "Schema to use for validating this action's parameters.")
 
-  (perform [this session parameters]
+  (perform [this get-content session parameters]
     "Perform this action.
 
      Given an `ISession` instance and a `map` of parameters, specific to each
