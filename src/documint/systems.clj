@@ -32,7 +32,6 @@
     (System/setProperty "org.apache.pdfbox.rendering.UsePureJavaCMYKConversion" "true")
     (component/system-map
      :keystore               keystore
-     :truststore             truststore
      :session-factory        (temp-file-session-factory)
      :renderer/flying-saucer (saucer/renderer (conf [:renderer] {}))
      :renderer/fop           (fop/renderer (conf [:renderer-fop] {}))
