@@ -135,6 +135,7 @@
 
 (defn signer-component
   "Create a `SignerComponent`."
-  [certificate-passwords]
+  [keystore certificate-passwords]
   (map->SignerComponent
-   {:certificate-passwords certificate-passwords}))
+   {:keystore              keystore
+    :certificate-passwords certificate-passwords}))

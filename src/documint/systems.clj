@@ -17,8 +17,9 @@
   []
   (let [config     (load-config)
         conf       (partial get-in config)
-        keystore   (open-keystore (conf [:keystore :path])
-                                  (conf [:keystore :password]))
+        keystore   (when (conf [:keystore])
+                     (open-keystore (conf [:keystore :path])
+                                    (conf [:keystore :password])))
         truststore (when (conf [:truststore])
                      (open-keystore (conf [:truststore :path])
                                     (conf [:truststore :password])))]
@@ -31,14 +32,12 @@
     ;; https://pdfbox.apache.org/2.0/getting-started.html#rendering-performance
     (System/setProperty "org.apache.pdfbox.rendering.UsePureJavaCMYKConversion" "true")
     (component/system-map
-     :keystore               keystore
      :session-factory        (temp-file-session-factory)
      :renderer/flying-saucer (saucer/renderer (conf [:renderer] {}))
      :renderer/fop           (fop/renderer (conf [:renderer-fop] {}))
-     :signer                 (component/using
-                              (signer-component
-                               (conf [:signing :certificate-passwords] {}))
-                              [:keystore])
+     :signer                 (signer-component
+                              keystore
+                              (conf [:signing :certificate-passwords] {}))
      :app                    (component/using
                               (web/new-app)
                               [:session-factory])
